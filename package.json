@@ -1,0 +1,36 @@
+{
+  "name": "comp-geo",
+  "version": "0.0.1",
+  "description": "2D Computational Geometry for Javascript",
+  "main": "index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Anselm Eickhoff",
+    "email": "anselm.eickhoff@gmail.com",
+    "url": "https://github.com/aeickhoff"
+  },
+  "dependencies": {
+    "babel-core": "^5.1.10",
+    "nd-linalg": "*",
+    "missing-stuff": "*",
+    "iteratorers": "*"
+  },
+  "devDependencies": {
+    "tape-catch": "^1.0.4",
+    "tap-spec": "https://github.com/citybound/tap-spec.git",
+    "tape": "^4.2.2",
+    "kinda-random": "*"
+  },
+  "scripts": {
+    "test": "node --harmony test.js"
+  },
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/citybound/comp-geo.git"
+  },
+  "homepage": "https://github.com/citybound/comp-geo",
+  "bugs": {
+    "url": "https://github.com/citybound/comp-geo/issues"
+  }
+}

@@ -1,0 +1,128 @@
+/* A doubly-linked list */
+
+var DEBUG_TRACK_CHAIN_ELEMENTS = true;
+var DEBUG_PRINT_CHAIN_OPERATIONS = false;
+
+var Chain;
+var isBroken;
+if (DEBUG_TRACK_CHAIN_ELEMENTS) {
+	isBroken = isBrokenDebug;
+	var ids = {};
+	Chain = function() {
+		if (ids[this.name] === undefined)
+			ids[this.name] = 0;
+		this.id = ids[this.name]++;
+		DEBUG_PRINT_CHAIN_OPERATIONS && console.log("new", this.name, this.id);
+
+		this.previous = this;
+		this.next = this;
+	}
+} else {
+	isBroken = isBrokenRuntime;
+	Chain = function() {
+		this.previous = this;
+		this.next = this;
+	}
+}
+
+Object.defineProperties(exports, {
+	"createConstructor": 	{value: Chain},
+
+	"connect": 				{value: connect},
+	"disconnect": 			{value: disconnect},
+	"isBroken": 			{value: isBroken}
+});
+
+Object.defineProperty(Chain.prototype, Symbol.iterator, {value: iterator});
+Object.defineProperties(Chain.prototype, {
+	"name": 			{value: "Chain"},
+	"toArray": 			{value: toArray},
+	"toComposite": 		{value: toComposite},
+	"length": 			{get: length},
+	"isSingleElement": 	{get: isSingleElement},
+	"clone": 			{value: clone},
+	"cloneElement": 	{value: cloneElement}
+});
+
+function connect(previous, next) {
+	previous.next = next;
+	next.previous = previous;
+}
+
+function disconnect(node) {
+	node.next = node;
+	node.previous = node;
+}
+
+function isBrokenRuntime(node) {
+	return false;
+}
+
+function isBrokenDebug(node) {
+	var id = 0;
+	var bag = [node.id];
+	if (!node.id) node.id = 0;
+	var path = [node.id];
+	var current = node.next;
+	var okay = false;
+	while(bag.indexOf(current) === -1) {
+		if (current === node) return false;
+		bag.push(current);
+		if (!current.id) current.id = id++;
+		path.push(current.id);
+		current = current.next;
+	}
+	path.push(current.id);
+	console.log("broken path", path.join(" -- "));
+	throw "Broken Chain";
+	return false;
+}
+
+function toArray() {
+	var array = [];
+	for (let each of this)
+		array.push(each);
+	return array;
+}
+
+function toComposite(colour) {
+	return {
+		"colour": colour || "black",
+		"visuals": this.toArray()
+	};
+}
+
+function length() {
+	var length = 0;
+	for (let each of this)
+		length++;
+	return length;
+}
+
+function isSingleElement() {
+	return this.next === this && this.previous === this;
+}
+
+function clone() {
+	var current = this,
+		clone = current.cloneElement();
+	while(true) {
+		current = current.next;
+		if (current === this) break;
+		clone = clone.append(current.cloneElement());
+	}
+	return clone.next;
+}
+
+function cloneElement() {
+	return new Chain();
+}
+
+function *iterator() {
+	var current = this;
+	while(true) {
+		yield current;
+		current = current.next;
+		if (current === this) break;
+	}
+}
