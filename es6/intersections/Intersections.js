@@ -253,8 +253,10 @@ function lineSegmentLineSegmentIntersections(a, b) {
 	// TODO: for flat angles this approximation is stupid
 	// u might be much further away from 0 than -Thickness,
 	// even when lines are just thickness apart
-	if (!between(-THICKNESS, u, 1 + THICKNESS)) return [];
-	if (!between(-THICKNESS, v, 1 + THICKNESS)) return [];
+	const uTolerance = THICKNESS / vec2.len(da);
+	const vTolerance = THICKNESS / vec2.len(db);
+	if (!between(-uTolerance, u, 1 + uTolerance)) return [];
+	if (!between(-vTolerance, v, 1 + vTolerance)) return [];
 
 	u = clamp(0, u, 1);
 	v = clamp(0, v, 1);

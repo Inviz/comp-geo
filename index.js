@@ -22,5 +22,6 @@ module.exports = {
 		Pather: require('./es6/helpers/Pather'),
 		Shape: require('./es6/shapes/Shape'),
 		Stroke: require('./es6/shapes/Stroke')
-	}
+	},
+	Drawing2D: require('./es6/drawing/Drawing2D')
 };
