@@ -1,6 +1,6 @@
 import Pather from '../../es6/helpers/Pather';
-import Random from 'kinda-random';
-import {Vector2 as vec2} from 'nd-linalg';
+import Chance from 'chance';
+import {Vector2 as vec2} from '../../es6/nd-linalg';
 import {THICKNESS} from '../../es6/intersections/Intersections';
 import LineSegment from '../../es6/primitives/LineSegment';
 import Curve from '../../es6/primitives/Curve';
@@ -836,7 +836,7 @@ let accurateTests = tests.map(({name, draw, assert, setup}) => {
 });
 
 function randomOffset (random) {
-	return vec2(random.get() * 0.5 * THICKNESS, random.get() * 0.5 * THICKNESS);
+	return vec2(random.floating({min:0,max:1}) * 0.5 * THICKNESS, random.floating({min:0,max:1}) * 0.5 * THICKNESS);
 }
 
 function deformShape (shape, random) {
@@ -862,7 +862,7 @@ function deformShape (shape, random) {
 
 let inaccurateTests = () => {
 	let seed = Math.floor(Math.random() * 100000000);
-	let random = new Random(seed);
+	let random = new Chance(seed);
 	console.log("SEED " + seed);
 	return tests.map(({name, draw, assert, setup}) => {
 		let setupResult = setup();

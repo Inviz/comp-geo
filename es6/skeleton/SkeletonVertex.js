@@ -1,3 +1,11 @@
+import { Vector2 as vec2 } from '../nd-linalg';
+import { Vector3 as vec3 } from '../nd-linalg';
+import { roughlyEqual } from '../missing-stuff';
+import Ray from '../primitives/ray';
+import Line from '../primitives/line';
+import intersect from '../intersections/intersections';
+import SkeletonSplitEvent from './skeletonsplitevent';
+
 var id = 0;
 export default class SkeletonVertex {
 	constructor(position, nextEdge) {
@@ -32,7 +40,7 @@ export default class SkeletonVertex {
 		let nextEdge = this.nextEdge;
 		let previousEdge = this.previousEdge;
 		let orientation = vec2.crossz(previousEdge.direction, nextEdge.direction);
-		let isParallel = this.isParallel = vec2.crossz(previousEdge.direction, nextEdge.direction).isRoughly(0);
+		let isParallel = this.isParallel = roughlyEqual( vec2.crossz(previousEdge.direction, nextEdge.direction), 0 );
 		this.isAcute = isParallel || orientation > 0;
 
 		// direction & projection

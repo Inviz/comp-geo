@@ -9,7 +9,7 @@ const path = require("path")
 
 const primitiveTests = [];
 
-["primitives", "intersections", "clipper", ""].forEach(function (testGroup) {
+["primitives", "skeleton"].forEach(function (testGroup) {
 	var tests = [];
 
 	fs.readdirSync(path.join(__dirname, "./tests/" + testGroup)).forEach(function (file) {

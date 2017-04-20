@@ -1,6 +1,6 @@
 import assert from 'assert';
 import LineSegment from '../../es6/primitives/LineSegment';
-import {assertRoughlyEqualVec2} from 'missing-stuff';
+import {assertRoughlyEqualVec2} from '../../es6/missing-stuff';
 
 Object.defineProperties(exports, {
 	name: {value: "line tests"},

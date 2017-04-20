@@ -1,6 +1,9 @@
 import intersect from '../intersections/Intersections';
-import {Vector2 as vec2} from 'nd-linalg';
+import {Vector2 as vec2} from '../nd-linalg';
 import {corner as RectangleCorner} from './Rectangle';
+import * as Triangle from './triangle';
+import { roughlyEqual, roughlyBetween } from '../missing-stuff';
+// import { colinear } from triangle;
 
 export default LineSegment;
 
@@ -114,8 +117,8 @@ function roughlyContainsPoint(p) {
 	let start = this.start, end = this.end;
 	return Triangle.colinear(start, p, end)
 		&& ((roughlyEqual(start[0], p[0]) || roughlyEqual(end[0], p[0]))
-			? p[1].roughlyBetween(start[1], end[1]) || p[1].roughlyBetween(end[1], start[1])
-			: p[0].roughlyBetween(start[0], end[0]) || p[0].roughlyBetween(end[0], start[0]));
+			? roughlyBetween( start[1], p[1], end[1]) || roughlyBetween( end[1], p[1], start[1])
+			: roughlyBetween( start[0], p[0], end[0]) || roughlyBetween( end[0], p[0], start[0]));
 }
 
 

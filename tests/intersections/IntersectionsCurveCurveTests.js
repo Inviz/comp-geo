@@ -1,8 +1,8 @@
 import assert from 'assert';
 import Curve from '../../es6/primitives/Curve';
 import intersect from '../../es6/intersections/Intersections';
-import {assertRoughlyEqual, assertRoughlyEqualVec2} from 'missing-stuff';
-import {Vector2 as vec2} from 'nd-linalg';
+import {assertRoughlyEqual, assertRoughlyEqualVec2} from '../../es6/missing-stuff';
+import {Vector2 as vec2} from '../../es6/nd-linalg';
 
 function drawIntersections(a, b, i) {
 	return [a, b].concat(i);

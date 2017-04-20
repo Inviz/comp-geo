@@ -1,3 +1,11 @@
+import Ray from '../primitives/ray';
+import Line from '../primitives/line';
+import * as Triangle from '../primitives/triangle';
+import { roughlyEqual, roughlyEqualVec2 } from '../missing-stuff';
+import intersect from '../intersections/intersections';
+import { Vector2 as vec2 } from '../nd-linalg';
+import { Vector3 as vec3 } from '../nd-linalg';
+
 var id = 0;
 var infinity = Infinity;
 export default class SkeletonCollapseEvent {
@@ -42,8 +50,10 @@ export default class SkeletonCollapseEvent {
 				return true;
 			default: {
 				// an edge cannot collapse if either of its projections are parallel to the edge
-				return !vec2.crossz(this.edge.lineDirection, this.edge.start.direction).isRoughly(0)
-					&& !vec2.crossz(this.edge.lineDirection, this.edge.end.direction).isRoughly(0);
+				const az = vec2.crossz(this.edge.lineDirection, this.edge.start.direction);
+				const bz = vec2.crossz(this.edge.lineDirection, this.edge.end.direction);
+				return !roughlyEqual(az,0)
+					&& !roughlyEqual(bz,0);
 			}
 		}
 	}
@@ -77,8 +87,8 @@ export default class SkeletonCollapseEvent {
 				center = Triangle.center(a, b, c);
 
 			let start = a, end = b;
-			if (vec2.roughlyEqual(a, b)) {
-				if (vec2.roughlyEqual(b, c)) {
+			if (roughlyEqualVec2(a, b)) {
+				if (roughlyEqualVec2(b, c)) {
 					start = c;
 					end = a;
 				} else {

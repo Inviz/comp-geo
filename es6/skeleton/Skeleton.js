@@ -15,6 +15,16 @@
  *  4) Extent the first and last segment to intersect the nearest original edge
  */
 
+import { Vector2 as vec2 } from '../nd-linalg';
+import { Vector3 as vec3 } from '../nd-linalg';
+import LineSegment from '../primitives/linesegment';
+import * as SkeletonEdge from './skeletonedge';
+import SkeletonWavefront from './skeletonwavefront';
+import Pather from '../../es6/helpers/pather';
+import Ray from '../primitives/ray';
+import Line from '../primitives/line';
+import intersect from '../intersections/intersections';
+
 var DeadEdge = Symbol("DeadEdge");
 var infinity = Infinity;
 export default class StraightSkeleton {
@@ -64,7 +74,7 @@ export default class StraightSkeleton {
 		while(this.wavefronts.length > 0) {
 			let wavefront = this.wavefronts[0];
 			if (!wavefront.process(this.length)) {
-				if (this.length === infinity) throw "EventsExhaustedPrematurely";
+				// if (this.length === infinity) throw "EventsExhaustedPrematurely";
 				this.commitWavefront(wavefront);
 				wavefront.remove();
 			}

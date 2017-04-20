@@ -1,5 +1,5 @@
 import Circle from '../../es6/primitives/Circle';
-import {assertRoughlyEqual} from 'missing-stuff';
+import {assertRoughlyEqual} from '../../es6/missing-stuff';
 
 Object.defineProperties(exports, {
 	name: {value: "circle tests"},

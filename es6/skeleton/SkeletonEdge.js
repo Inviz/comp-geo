@@ -1,4 +1,13 @@
 var infinity = Infinity;
+import SkeletonVertex from './skeletonvertex';
+import SkeletonCollapseEvent from './skeletoncollapseevent';
+import SkeletonSplitEvent from './skeletonsplitevent';
+import { Vector2 as vec2 } from '../nd-linalg';
+import Chain from '../datastructures/chain';
+import Ray from '../primitives/ray';
+import Line from '../primitives/line';
+import intersect from '../intersections/intersections';
+import LineSegment from '../primitives/linesegment';
 
 export var InnerEdge = Symbol("InnerEdge"),
 	OuterEdge = Symbol("OuterEdge"),
@@ -6,6 +15,7 @@ export var InnerEdge = Symbol("InnerEdge"),
 	EndCapEdge = Symbol("EndCapEdge");
 
 export function create(path, isInfinite) {
+	// console.log('isclosed', path.isClosed);
 	return path.isClosed
 		 ? createClosedPath(path, isInfinite)
 		 : createOpenPath(path, isInfinite);
@@ -25,7 +35,7 @@ function createClosedPath(path, isInfinite) {
 
 	if (isInfinite) return [first];
 
-	let second = new SkeletonEdge(segments.last().end, OuterEdge);
+	let second = new SkeletonEdge(segments[segments.length-1].end, OuterEdge);
 	previous = second;
 	for (let i = segments.length - 2; i >= 0; i--) {
 		let next = new SkeletonEdge(segments[i].end, OuterEdge);
@@ -52,10 +62,10 @@ function createOpenPath(path, isInfinite) {
 
 	for (let segment of segments)
 		edges[i++] = new SkeletonEdge(segment.start, InnerEdge);
-	edges[i] = new SkeletonEdge(segments.last().end, EndCapEdge);
+	edges[i] = new SkeletonEdge(segments[segments.length-1].end, EndCapEdge);
 
 	connect(edges);
-	connect([edges.last(), edges[0]]);
+	connect([edges[edges.length-1], edges[0]]);
 	//Chain.isBroken(edges[0]);
 
 	return [edges[0]];

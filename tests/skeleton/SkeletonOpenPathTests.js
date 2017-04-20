@@ -1,3 +1,13 @@
+import Pather from '../../es6/helpers/pather';
+import Skeleton from '../../es6/skeleton/skeleton';
+import SkeletonVertex from '../../es6/skeleton/skeletonvertex';
+import * as SkeletonEdge from '../../es6/skeleton/skeletonedge';
+import { assert } from '../../es6/missing-stuff';
+import Chance from 'chance';
+import { Vector2 as vec2 } from '../../es6/nd-linalg';
+import Path from '../../es6/shapes/path';
+import LineSegment from '../../es6/primitives/linesegment';
+
 function drawWithoutSpokes(path, skeleton) {
 	return [{colour: "#AAA", visuals: [path]}].concat(skeleton.waves.map(e => e.path));
 }

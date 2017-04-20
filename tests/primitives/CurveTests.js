@@ -2,7 +2,7 @@ import Curve from '../../es6/primitives/Curve';
 import LineSegment from '../../es6/primitives/LineSegment';
 import intersect from '../../es6/intersections/Intersections';
 import assert from 'assert';
-import {assertRoughlyEqual, assertRoughlyEqualVec2} from 'missing-stuff';
+import {assertRoughlyEqual, assertRoughlyEqualVec2} from '../../es6/missing-stuff';
 
 Object.defineProperties(exports, {
 	name: {value: "curve tests"},

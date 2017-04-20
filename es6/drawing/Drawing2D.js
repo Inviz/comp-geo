@@ -2,7 +2,7 @@ import AffineTransform from '../helpers/AffineTransform';
 import DrawingCommand2D from './DrawingCommand2D';
 import DrawingContext2D from './DrawingContext2D';
 import Rectangle, {minmax as rectangleMinMax} from '../primitives/Rectangle';
-import Random from 'kinda-random';
+import Chance from 'chance';
 
 export default Drawing2D;
 
@@ -341,9 +341,9 @@ function setStyle(drawing) {
 }
 
 function randomStyle() {
-	var random = new Random();
+	var random = new Chance()
 	return "rgb(" +
-		random.between(0, 255) + "," +
-		random.between(0, 255) + "," +
-		random.between(0, 255) + ")";
+		random.floating({min:0, max:255}) + "," +
+		random.floating({min:0, max:255}) + "," +
+		random.floating({min:0, max:255}) + ")";
 }

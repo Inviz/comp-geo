@@ -15,9 +15,9 @@
 
 import Chain from '../datastructures/Chain';
 import intersect, {THICKNESS} from '../intersections/Intersections';
-import {roughlyEqual, mapPush} from 'missing-stuff';
-import {Vector2 as vec2} from 'nd-linalg';
-import It from 'iteratorers';
+import {roughlyEqual, mapPush} from '../missing-stuff';
+import {Vector2 as vec2} from '../nd-linalg/vector2';
+import It from '../iteratorers';
 import Path from '../shapes/Path';
 import Drawing2D from '../drawing/Drawing2D';
 
@@ -212,20 +212,22 @@ function findIntersections (subjectChain, clipChain) {
 
 function splitAtIntersections (subjectChain, clipChain, subjectIntersectionGroups, clipIntersectionGroups) {
 	for (let intersectionGroup of subjectIntersectionGroups.values()) {
-		intersectionGroup.sort((a, b) => a.u > b.u);
-		let latestSubjectVertex = intersectionGroup[0].subjectVertex;
+		const sorted = Array.from( subjectIntersectionGroups.values() ).sort((a, b) => a.u > b.u);
+		let latestSubjectVertex = sorted[0].subjectVertex;
 
-		for (let intersectionInfo of intersectionGroup) {
+		console.log(sorted);
+		for (let intersectionInfo of sorted) {
+			console.log(intersectionInfo );
 			let subjectVertex = latestSubjectVertex;
 			let newSubjectVertex;
 
-			if (vec2.dist(intersectionInfo.position, subjectVertex.position) < THICKNESS)
-				newSubjectVertex = subjectVertex;
-			else if (vec2.dist(intersectionInfo.position, subjectVertex.next.position) < THICKNESS)
-				newSubjectVertex = subjectVertex.next;
-			else {
-				newSubjectVertex = subjectVertex.split(intersectionInfo.position);
-			}
+			// if (vec2.dist(intersectionInfo.position, subjectVertex.position) < THICKNESS)
+			// 	newSubjectVertex = subjectVertex;
+			// else if (vec2.dist(intersectionInfo.position, subjectVertex.next.position) < THICKNESS)
+			// 	newSubjectVertex = subjectVertex.next;
+			// else {
+			// 	newSubjectVertex = subjectVertex.split(intersectionInfo.position);
+			// }
 
 			intersectionInfo.subjectVertex = newSubjectVertex;
 			latestSubjectVertex = newSubjectVertex;
@@ -233,10 +235,11 @@ function splitAtIntersections (subjectChain, clipChain, subjectIntersectionGroup
 	}
 
 	for (let intersectionGroup of clipIntersectionGroups.values()) {
-		intersectionGroup.sort((a, b) => a.v > b.v);
-		let latestClipVertex = intersectionGroup[0].clipVertex;
+		const sorted = Array.from( subjectIntersectionGroups.values() ).sort((a, b) => a.v > b.v);
+		// intersectionGroup.sort((a, b) => a.v > b.v);
+		let latestClipVertex = sorted[0].clipVertex;
 
-		for (let intersectionInfo of intersectionGroup) {
+		for (let intersectionInfo of sorted) {
 			let clipVertex = latestClipVertex;
 			let newClipVertex;
 

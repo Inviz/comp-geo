@@ -1,5 +1,5 @@
 import intersect, {THICKNESS} from '../intersections/Intersections';
-import {Vector2 as vec2} from 'nd-linalg';
+import {Vector2 as vec2} from '../nd-linalg';
 import {angleFrom} from '../helpers/Angles';
 
 export default Circle;
@@ -50,7 +50,7 @@ function translate(offset) {
 	vec2.add(center, center, offset);
 	return new Circle(center, this.radius);
 }
-	
+
 // Return the angle for point p on the circle
 function angle(p) {
 	return angleFrom(p, this.center);

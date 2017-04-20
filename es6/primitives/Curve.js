@@ -1,9 +1,9 @@
 import intersect from '../intersections/Intersections';
-import {Vector2 as vec2} from 'nd-linalg';
+import {Vector2 as vec2} from '../nd-linalg';
 import LineSegment from './LineSegment';
 import Ray from './Ray';
 import Rectangle from './Rectangle';
-import {roughlyEqual, roughlyBetween} from 'missing-stuff';
+import {roughlyEqual, roughlyBetween, roughlyEqualVec2} from '../missing-stuff';
 
 export default function Curve(start, direction, end) {
 	this.start = start;
@@ -28,7 +28,7 @@ export default function Curve(start, direction, end) {
 		// if it doesn't then this is an infinite circle, not a line
 		vec2.normalize(vChord, vChord);
 		var diff = vec2.add(vec2(0, 0), vChord, this.direction);
-		if (!vec2.roughlyEqual(diff, [0, 0]))
+		if (!roughlyEqualVec2(diff, [0, 0]))
 			throw "Not a valid curve, infinite circle found";
 
 		//this.length = chordLength;
@@ -217,7 +217,7 @@ function wedgeContainsPoint(p, tolerance) {
 	// sign1 = sign(dir x test) <
 	// sign2 = sign(test x end)
 	// contained if:
-	//    sign1 == 0 || sign2 == 0 
+	//    sign1 == 0 || sign2 == 0
 	//    sign0 == sign1 && sign0 == sign2
 
 	var test = vec2(0, 0),

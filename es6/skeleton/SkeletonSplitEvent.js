@@ -1,3 +1,12 @@
+import Ray from '../primitives/ray';
+import Line from '../primitives/line';
+import intersect from '../intersections/intersections';
+import { Vector2 as vec2 } from '../nd-linalg';
+import { Vector3 as vec3 } from '../nd-linalg';
+import { roughlyEqual } from '../missing-stuff';
+import * as SkeletonEdge from './skeletonedge';
+import SkeletonWavefront from './skeletonwavefront';
+
 var id = 0;
 var infinity = Infinity;
 var ROUGHLY_EPSILON = Number.ROUGHLY_EPSILON;
@@ -90,7 +99,11 @@ export default class SkeletonSplitEvent {
 	}
 
 	remove() {
-		this.vertex.events = this.vertex.events.without(this);
+		const _this = this;
+		this.vertex.events = this.vertex.events.filter( function( ele ){
+			return ele !== _this;
+		});
+		// this.vertex.events = this.vertex.events.without(this);
 	}
 
 	description() {

@@ -1,4 +1,4 @@
-import {Vector2 as vec2} from 'nd-linalg';
+import {Vector2 as vec2} from '../nd-linalg';
 
 export {theta, angleFrom};
 

@@ -1,3 +1,5 @@
+import { roughlyEqual } from '../missing-stuff';
+
 export default class Triangle {
 	constructor(a, b, c) {
 		this.a = a;
@@ -10,7 +12,9 @@ export default class Triangle {
 }
 
 export function colinear(a, b, c) {
-	return ((b[0] - a[0]) * (c[1] - a[1])).isRoughly((c[0] - a[0]) * (b[1] - a[1]));
+	const m = (c[0] - a[0]) * (b[1] - a[1]);
+	const n = ((b[0] - a[0]) * (c[1] - a[1]));
+	return roughlyEqual( n, m );
 }
 
 export function center(a, b, c) {

@@ -2,7 +2,7 @@ import assert from 'assert';
 import LineSegment from '../../es6/primitives/LineSegment';
 import Curve from '../../es6/primitives/Curve';
 import intersect from '../../es6/intersections/Intersections';
-import {assertRoughlyEqual, assertRoughlyEqualVec2} from 'missing-stuff';
+import {assertRoughlyEqual, assertRoughlyEqualVec2} from '../../es6/missing-stuff';
 
 function drawIntersections(a, b, i) {
 	return [a, b].concat(i);

@@ -1,3 +1,5 @@
+import { roughlyEqual } from '../missing-stuff';
+
 const TIME_EPSILON = 1e-8;
 var max = Math.max;
 var infinity = Infinity;

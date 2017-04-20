@@ -1,5 +1,5 @@
 import Intersections from '../intersections/Intersections';
-import {Vector2 as vec2} from 'nd-linalg';
+import {Vector2 as vec2} from '../nd-linalg';
 
 export default Ray;
 

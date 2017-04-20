@@ -1,9 +1,10 @@
-import intersect from '../intersections/Intersections';
-import {Vector2 as vec2} from 'nd-linalg';
+import intersect from '../intersections/intersections';
+import {Vector2 as vec2} from '../nd-linalg';
 import LineSegment from '../primitives/LineSegment';
 import Curve from '../primitives/Curve';
 import {corner as RectangleCorner} from '../primitives/Rectangle';
-import It from 'iteratorers';
+import It from '../iteratorers';
+import { roughlyEqualVec2 } from '../missing-stuff';
 
 export default class Path {
 	constructor (segments, isClockwise, boundingBox) {
@@ -24,8 +25,9 @@ export default class Path {
 
 	// Return true if the path is closed and can be considered a shape
 	get isClosed () {
+		// console.log('is closed check', this.segments[0].start, this.segments[this.segments.length - 1].end)
 		return	this.segments.length > 1
-			&&	vec2.roughlyEqual(this.segments[0].start, this.segments[this.segments.length - 1].end);
+			&&	roughlyEqualVec2(this.segments[0].start, this.segments[this.segments.length - 1].end);
 	}
 
 	get isCounterClockwise () {return !this.isClockwise}
@@ -36,7 +38,7 @@ export default class Path {
 		for (var i = 0; i < this.segments.length - 1; i++) {
 			var a = this.segments[i];
 			var b = this.segments[i + 1];
-			if (!vec2.roughlyEqual(a.end, b.start))
+			if (!roughlyEqualVec2(a.end, b.start))
 				return false;
 		}
 
@@ -44,7 +46,7 @@ export default class Path {
 	}
 
 	get start () {return this.segments[0].start};
-	get end () {return this.segments.last().end};
+	get end () {return this.segments[ this.segments.length-1].end};
 
 	concat (path) {return new Path(this.segments.concat(path.segments));}
 
@@ -63,7 +65,7 @@ export default class Path {
 
 		var firstSegmentToReplace// = this.segments[0];
 		var firstSegmentToReplaceIndex// = 0;
-		var lastSegmentToReplace// = this.segments.last();
+		var lastSegmentToReplace// = this.segments[ this.segments.length-1];
 		var lastSegmentToReplaceIndex// = this.segments.length - 1;
 
 		for (var s = 0; s < this.segments.length; s++) {
@@ -112,16 +114,16 @@ export default class Path {
 
 		for (let [segmentA, segmentB] of this.segments.values().windows(2)) {
 			newSegments.push(segmentA);
-			if (!vec2.roughlyEqual(segmentA.end, segmentB.start)) {
+			if (!roughlyEqualVec2(segmentA.end, segmentB.start)) {
 				newSegments.push(new LineSegment(segmentA.end, /*segmentA.endDirection,*/ segmentB.start));
 			}
 		}
 
-		newSegments.push(this.segments.last());
+		newSegments.push(this.segments[ this.segments.length-1]);
 
-		if (isLoop && !vec2.roughlyEqual(this.segments.last().end, this.segments[0].start)) {
+		if (isLoop && !roughlyEqualVec2(this.segments[ this.segments.length-1].end, this.segments[0].start)) {
 			newSegments.push(new LineSegment(
-				this.segments.last().end, /*this.segments.last().end.endDirection,*/ this.segments[0].start));
+				this.segments[ this.segments.length-1].end, /*this.segments[ this.segments.length-1].end.endDirection,*/ this.segments[0].start));
 		}
 
 		return new Path(newSegments);
@@ -163,7 +165,7 @@ export default class Path {
 				var offsetOfPreviousIntersection = segment.offsetOf(previousIntersectionPosition);
 				var directionOfPreviousIntersection = segment.directionOf(offsetOfPreviousIntersection);
 
-				if (foundSelfIntersection && !vec2.roughlyEqual(previousIntersectionPosition, intersectionPosition)) {
+				if (foundSelfIntersection && !roughlyEqualVec2(previousIntersectionPosition, intersectionPosition)) {
 					newSegments.push(new Curve(previousIntersectionPosition, directionOfPreviousIntersection, intersectionPosition));
 					s = nextSegmentIndex;
 					previousIntersectionPosition = intersectionPosition;
@@ -192,7 +194,7 @@ export default class Path {
 		for (let [segment, nextSegment] of It().windows(2).of(It.concat(longEnoughSegments, [longEnoughSegments[0]])())) {
 			let newEnd = segment.end;
 
-			if (vec2.roughlyEqual(segment.end, nextSegment.start, maxWeldDistance)) {
+			if (roughlyEqualVec2(segment.end, nextSegment.start, maxWeldDistance)) {
 				newEnd = nextSegment.start;
 			}
 
@@ -426,7 +428,7 @@ export default class Path {
 		}
 
 		if (!segmentToUse) {
-			segmentToUse = this.segments.last();
+			segmentToUse = this.segments[ this.segments.length-1];
 			segmentOffset = this.segmentOffsets.last();
 		}
 

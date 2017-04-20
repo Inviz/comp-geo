@@ -1,7 +1,7 @@
 import assert from 'assert';
 import {theta as AngleTheta} from '../helpers/Angles';
-import {Vector2 as vec2} from 'nd-linalg';
-import {clamp, between, roughlyEqual, ROUGHLY_EPSILON} from 'missing-stuff';
+import {Vector2 as vec2} from '../nd-linalg';
+import {clamp, between, roughlyEqual, roughlyEqualVec2, ROUGHLY_EPSILON} from '../missing-stuff';
 
 export default intersect;
 
@@ -57,11 +57,11 @@ function rayRayIntersections(a, b) {
 	// Parallel, overlap or no intersection
 	if (roughlyEqual(det, 0)) {
 		// edge case: same start position
-		if (vec2.roughlyEqual(a.start, b.start, THICKNESS))
+		if (roughlyEqualVec2(a.start, b.start, THICKNESS))
 			return [new Intersection(a.start[0], a.start[1], 0, 0)];
 
 		// not facing the same direction
-		if (!vec2.roughlyEqual(a.direction, b.direction)) return [];
+		if (!roughlyEqualVec2(a.direction, b.direction)) return [];
 
 		// too far apart
 		if (pointToLineDistance(a.start, b.start, b.direction) > THICKNESS) return [];
@@ -71,7 +71,7 @@ function rayRayIntersections(a, b) {
 		var bToA = vec2(0, 0);
 		vec2.sub(bToA, b.start, a.start);
 		vec2.normalize(bToA, bToA);
-		if (vec2.roughlyEqual(a.direction, bToA))
+		if (roughlyEqualVec2(a.direction, bToA))
 			return [new Intersection(b.start[0], b.start[1], 0, 0)];
 		else
 			return [new Intersection(a.start[0], a.start[1], 0, 0)];
@@ -98,7 +98,7 @@ function lineLineIntersections(a, b) {
 	// Parallel, overlap or no intersection
 	if (roughlyEqual(det, 0)) {
 		// edge case: same start position
-		if (vec2.roughlyEqual(a.middle, b.middle, THICKNESS))
+		if (roughlyEqualVec2(a.middle, b.middle, THICKNESS))
 			return [new Intersection(a.middle[0], a.middle[1], 0, 0)];
 
 		// too far apart
@@ -109,7 +109,7 @@ function lineLineIntersections(a, b) {
 		var c = vec2(0, 0);
 		vec2.sub(c, b.middle, a.middle);
 		vec2.normalize(c, c);
-		if (vec2.roughlyEqual(a.direction, c))
+		if (roughlyEqualVec2(a.direction, c))
 			return [new Intersection(b.middle[0], b.middle[1], 0, 0)];
 		else
 			return [new Intersection(a.middle[0], a.middle[1], 0, 0)];
@@ -130,7 +130,7 @@ function rayLineIntersections(a, b) {
 	// Parallel, overlap or no intersection
 	if (roughlyEqual(det, 0)) {
 		// edge case: same start position
-		if (vec2.roughlyEqual(a.start, b.middle, THICKNESS))
+		if (roughlyEqualVec2(a.start, b.middle, THICKNESS))
 			return [new Intersection(a.start[0], a.start[1], 0, 0)];
 
 		// too far apart
@@ -141,7 +141,7 @@ function rayLineIntersections(a, b) {
 		var c = vec2(0, 0);
 		vec2.sub(c, b.middle, a.start);
 		vec2.normalize(c, c);
-		if (vec2.roughlyEqual(a.direction, c))
+		if (roughlyEqualVec2(a.direction, c))
 			return [new Intersection(b.middle[0], b.middle[1], 0, 0)];
 		else
 			return [new Intersection(a.start[0], a.start[1], 0, 0)];
@@ -215,7 +215,7 @@ function lineSegmentLineSegmentIntersections(a, b) {
 		}
 
 		// Shared point in the center
-		if (vec2.roughlyEqual(sorted[1].position, sorted[2].position, THICKNESS)) {
+		if (roughlyEqualVec2(sorted[1].position, sorted[2].position, THICKNESS)) {
 			var position = sorted[1].position;
 			return [new Intersection(
 				position[0],
@@ -400,7 +400,7 @@ function circleCircleIntersections(a, b) {
 function curveCurveIntersections(a, b) {
 	var intersections = [];
 
-	if (vec2.roughlyEqual(a.center, b.center, THICKNESS)
+	if (roughlyEqualVec2(a.center, b.center, THICKNESS)
 		&& roughlyEqual(a.radius, b.radius, THICKNESS)) {
 		if (a.wedgeContainsPoint(b.start, THICKNESS))
 			intersections.push(

@@ -1,3 +1,13 @@
+import Pather from '../../es6/helpers/pather';
+import Skeleton from '../../es6/skeleton/skeleton';
+import SkeletonVertex from '../../es6/skeleton/skeletonvertex';
+import SkeletonEdge from '../../es6/skeleton/skeletonedge';
+import { assert } from '../../es6/missing-stuff';
+import Chance from 'chance';
+import { Vector2 as vec2 } from '../../es6/nd-linalg';
+import Path from '../../es6/shapes/path';
+import Shape from '../../es6/shapes/shape';
+
 function draw(path, skeleton) {
 	function drawspokes(context) {
 		let min = 0.1, max = 0;
@@ -121,6 +131,12 @@ var tests = [
 			return [convex(), new Skeleton(convex(), Infinity, options)];
 		},
 		assert: function(path, skeleton) {
+			// console.log( JSON.stringify( new Path( skeleton.spokes ).vertices(), null, 2 ) );
+			// console.log( JSON.stringify( skeleton.spokes, null, 2 ) );
+
+			path = path.concat( new Path( skeleton.spokes ) );
+			const shape = new Shape( path );
+
 			assert(skeleton.spokes.length > 0);
 		}
 	},
@@ -309,9 +325,9 @@ var tests = [
 		draw: () => [],
 		setup: function() {
 			var i = 0;
-			var random = new Random();
+			var random = new Chance();
 			while(true) {
-				let sd = random.between(0, Number.MAX_SAFE_INTEGER);
+				let sd = random.floating({min:0, max:Number.MAX_SAFE_INTEGER});
 				if (i % 10 == 0) console.clear();
 				console.log(i++, sd);
 				let shape = scenario(numberOfEdges, sd);
@@ -331,12 +347,12 @@ function scenario(numberOfPoints, seed) {
 	var step = 2 * Math.PI / numberOfPoints,
 		angle = step,
 		pather = new Pather([1, 0.5]),
-		random = new Random(seed);
+		random = new Chance(seed);
 
 	for (var i = 0; i < (numberOfPoints - 1); i++) {
 		var x = Math.cos(angle),
 			y = Math.sin(angle),
-			scale = random.get() * 0.9 + 0.1;
+			scale = random.floating({min:0,max:1}) * 0.9 + 0.1;
 		var vector = vec2.scale(vec2(0, 0), [x, y], scale * 0.5);
 		vec2.add(vector, vector, [0.5, 0.5]);
 		pather.lineTo(vector);

@@ -1,4 +1,4 @@
-import {Vector2 as vec2} from 'nd-linalg';
+import {Vector2 as vec2} from '../nd-linalg';
 import Path from '../shapes/Path';
 import LineSegment from '../primitives/LineSegment';
 import Curve from '../primitives/Curve';
@@ -83,6 +83,8 @@ function close() {
 	this.current = line.end;
 	this.direction = line.direction;
 	updateOrientation(this);
+
+	// console.log('after closing',this.path.isClosed );
 
 	return this.path;
 }

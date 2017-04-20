@@ -1,4 +1,11 @@
-exports.createConstructor = Shape;
+import * as THREE from 'three';
+import { ROUGHLY_EPSILON } from '../missing-stuff';
+import { Vector3 as vec3 } from '../nd-linalg';
+
+import cdt2d from 'cdt2d';
+import cleanPSLG from 'clean-pslg';
+
+export default Shape;
 
 function Shape(contourPath, holes) {
 	this.contour = contourPath;
@@ -47,25 +54,109 @@ function not(otherShape) {
 
 }
 
-function triangulate(minVertexDistance) {
-	var geometry = new THREE.Geometry();
+function triangulate(minVertexDistance = 0.00001) {
+	const geometry = new THREE.Geometry();
 
-	var triangulation = earcut([this.contour.vertices(0, minVertexDistance)], true);
+	const points = [];
+	const edges = [];
 
-	for (var i = 0; i < triangulation.vertices.length/2; i ++)
-		geometry.vertices.push(new THREE.Vector3(
-			triangulation.vertices[i * 2],
-			triangulation.vertices[i * 2 + 1], 0)
-		);
-	for (i = 0; i < triangulation.indices.length/3; i ++)
-		geometry.faces.push(new THREE.Face3(
-			triangulation.indices[i * 3],
-			triangulation.indices[i * 3 + 1],
-			triangulation.indices[i * 3 + 2])
-		);
+	const vertices = [];
+
+	this.contour.segments.forEach( function( {start, end}, index ){
+		vertices.push( start, end );
+		points.push( [start[0], start[1]], [end[0], end[1]] );
+		edges.push( [index * 2, index * 2 + 1] );
+	});
+
+	//	preserve z-axis data...
+	const zs = {};
+	vertices.forEach( function( [x,y,z] ){
+		zs[ x.toFixed(4)+'_'+y.toFixed(4) ] = z;
+	});
+
+	//	clean up skeleton + contour because it's not a valid edge loop
+	cleanPSLG( points, edges );
+
+	const triangulation = cdt2d( points, edges, {exterior:false} );
+
+	const points3D = points.map( function( [x,y] ){
+		const key = x.toFixed(4)+'_'+y.toFixed(4);
+		const z = zs[key];
+		if( z === undefined ){
+			return [ x,y,0 ];
+		}
+		return [x,y,z];
+	});
+
+	// console.log( zs, points3D );
+
+	geometry.vertices = points3D.map( function( [x,y,z] ){
+		return new THREE.Vector3( x,y,z );
+	});
+
+	geometry.faces = triangulation.map( function( [ix, iy, iz] ){
+		return new THREE.Face3( ix, iy, iz );
+	});
 
 	return geometry;
 }
+
+// function triangulate2(minVertexDistance = 0.00001) {
+// 	var geometry = new THREE.Geometry();
+
+// 	const vs = this.contour.vertices(0, minVertexDistance);
+
+// 	//	TODO / FIXME
+// 	//	this is pretty awful, find a more elegant solution...
+// 	const unique = [];
+// 	for( let i=0; i<vs.length; i++ ){
+// 		const vertex = vs[ i ];
+
+// 		let found = false;
+// 		for( let s=0; s<unique.length; s++ ){
+// 			if( vec3.dist( unique[ s ], vertex ) < minVertexDistance ){
+// 				found = true;
+// 				break;
+// 			}
+// 		}
+
+// 		if( !found ){
+// 			unique.push( vertex );
+// 		}
+// 	}
+
+// 	console.log( unique );
+
+// 	const vertices = unique.reduce( function( collection, vertex ){
+// 		const z = vertex[2] !== undefined ? vertex[2] : 0;
+// 		collection.push( vertex[0], vertex[1], z );
+// 		return collection;
+// 	}, [] );
+
+// 	// console.log(vertices);
+
+// 	var triangulation = earcut( vertices, null, 3 );
+// 	console.log(triangulation);
+
+// 	for (var i = 0; i < triangulation.length; i +=3){
+// 		const ia = triangulation[ i ] * 3;
+// 		const ib = triangulation[ i + 1 ] * 3;
+// 		const ic = triangulation[ i + 2 ] * 3;
+
+// 		const va = new THREE.Vector3( vertices[ia], vertices[ia+1], vertices[ia+2] );
+// 		const vb = new THREE.Vector3( vertices[ib], vertices[ib+1], vertices[ib+2] );
+// 		const vc = new THREE.Vector3( vertices[ic], vertices[ic+1], vertices[ic+2] );
+
+// 		geometry.vertices.push( va, vb, vc );
+// 		geometry.faces.push( new THREE.Face3( i, i+1, i+2 ) );
+
+// 		// console.log( i, va, i+1, vb, i+2, vc );
+// 	}
+
+// 	// console.log( geometry.vertices );
+
+// 	return geometry;
+// }
 
 function area() {
 	var vertices = earcut([this.contour.vertices(0, 1)]);
