@@ -43,7 +43,7 @@ See example/app.js
 
 For general use from path to THREE.js roof shapes:
 
-    //  Path is an array of [ x, y ]s
+    //  Path is an array of LineSegment(s)
     const skeleton = new CompGeo.Skeleton( path, Infinity );
     const skeletonPath = new CompGeo.shapes.Path( skeleton.spokes );
     const shape = new CompGeo.shapes.Shape( path.concat( skeletonPath ) );
