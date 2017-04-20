@@ -64,7 +64,25 @@ window.addEventListener('keydown', function(){
     pathIndex = 0;
   }
   generate( TestPath[ pathList[ pathIndex ] ] );
-}, true);
+}, true)
+;
+
+function gameShapeToPath( shape ){
+  //  game shape here is an array of array of {x,y,z}s
+  const first = shape[0][0];
+  const pather = new CompGeo.shapes.Pather( [first.x, first.y] );
+  shape.forEach( function( path ){
+    path.forEach( function( vertex, vi ){
+      if( vi === 0 ){
+        return;
+      }
+      pather.lineTo( [ vertex.x, vertex.y ] );
+    });
+    pather.close();
+    pather.moveTo( path[ 0 ].x, path[ 0 ].y );
+  });
+  return pather.path;
+}
 
 
 function segmentsToGeometry( segments ){
