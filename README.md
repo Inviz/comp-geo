@@ -11,7 +11,8 @@ Uses primitives with a configurable **thickness** for giving reasonable results 
 # Status of this module
 
 The module this was forked from was no longer being maintained. I've managed to get skeleton and shape / paths working. The rest may still be broken as the tests are not currently passing. Use at your own peril!
-*@mflux
+
+* - @mflux
 
 # Tests
 
