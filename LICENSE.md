@@ -1,5 +1,6 @@
 The MIT License (MIT)
-Copyright (c) 2015 Anselm Eickhoff and Michael Lucas-Smith
+
+Copyright (c) for portions of project Comp-Geo are held by Anselm Eickhoff and Michael Lucas-Smith 2015 as part of project CityBound. All other copyright for project Comp-Geo are held by Michael Chang.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
