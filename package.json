@@ -1,13 +1,13 @@
 {
   "name": "comp-geo",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "2D Computational Geometry for Javascript",
   "main": "index.js",
   "license": "MIT",
   "author": {
-    "name": "Anselm Eickhoff",
-    "email": "anselm.eickhoff@gmail.com",
-    "url": "https://github.com/aeickhoff"
+    "name": "Anselm Eickhoff & Michael Chang",
+    "email": "flux.blackcat@gmail.com",
+    "url": "https://github.com/mflux"
   },
   "dependencies": {
     "babel-core": "^5.1.10",
@@ -33,10 +33,10 @@
   "keywords": [],
   "repository": {
     "type": "git",
-    "url": "git://github.com/citybound/comp-geo.git"
+    "url": "git://github.com/mflux/comp-geo.git"
   },
-  "homepage": "https://github.com/citybound/comp-geo",
+  "homepage": "https://github.com/mflux/comp-geo",
   "bugs": {
-    "url": "https://github.com/citybound/comp-geo/issues"
+    "url": "https://github.com/mflux/comp-geo/issues"
   }
 }
