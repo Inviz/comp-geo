@@ -1,8 +1,8 @@
 {
   "name": "comp-geo",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "2D Computational Geometry for Javascript",
-  "main": "build/comp-geo.js",
+  "main": "build/compgeo.js",
   "license": "MIT",
   "author": {
     "name": "Anselm Eickhoff & Michael Chang",
