@@ -1,8 +1,8 @@
 {
   "name": "comp-geo",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "2D Computational Geometry for Javascript",
-  "main": "index.js",
+  "main": "build/comp-geo.js",
   "license": "MIT",
   "author": {
     "name": "Anselm Eickhoff & Michael Chang",
@@ -28,7 +28,8 @@
   },
   "scripts": {
     "test": "node --harmony test.js",
-    "dev": "budo example/app.js --live -- -t [ babelify --presets [ es2015 ] ]"
+    "dev": "budo example/app.js --live -- -t [ babelify --presets [ es2015 ] ]",
+    "build": "browserify index.js -t [ babelify --presets [ es2015 ] ] -o build/compgeo.js"
   },
   "keywords": [],
   "repository": {
