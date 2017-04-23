@@ -14,7 +14,8 @@ export default {
   external: [
     'three',
     'cdt2d',
-    'clean-pslg'
+    'clean-pslg',
+    'babel-polyfill'
   ],
 
   plugins: [

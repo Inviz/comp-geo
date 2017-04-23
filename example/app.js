@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import * as CompGeo from '../index';
+import * as CompGeo from '../es6/index';
 import * as TestPath from './testpath';
 
 const createOrbitViewer = require('three-orbit-viewer')(THREE);

@@ -2,6 +2,7 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+require('babel-polyfill');
 var THREE = require('three');
 var cdt2d = _interopDefault(require('cdt2d'));
 var cleanPSLG = _interopDefault(require('clean-pslg'));
@@ -5531,14 +5532,15 @@ function growWithSkeleton(amount) {
 	return new Shape$1(skeleton.waves[0].path);
 }
 
-require("babel-core/register")({
-	blacklist: ['regenerator', 'es6.forOf'],
-	optional: ['es7.classProperties']
-});
+// require("babel-core/register")({
+// 	blacklist: ['regenerator', 'es6.forOf'],
+// 	optional: ['es7.classProperties']
+// });
 
 // import Clipper from './es6/clipper/clipper';
 // import Intersections from './es6/intersections/Intersections';
 // import PathCollisionCollection from './es6/shapes/PathCollisionCollection';
+
 // import Circle from './es6/primitives/Circle';
 // import Curve from './es6/primitives/Curve';
 // import Line from './es6/primitives/Line';
@@ -5548,12 +5550,14 @@ require("babel-core/register")({
 // import Triangle from './es6/primitives/Triangle';
 // import Stroke from './es6/shapes/Stroke';
 
-var index = {
+var out = {
 	Skeleton: StraightSkeleton,
 	shapes: {
 		Path: Path, Pather: Pather$1, Shape: Shape$1
 	}
 };
+
+module.exports = out;
 
 // module.exports = {
 // 	Clipper: require('./es6/clipper/Clipper'),
@@ -5577,6 +5581,4 @@ var index = {
 // 	},
 // 	Drawing2D: require('./es6/drawing/Drawing2D')
 // };
-
-module.exports = index;
 //# sourceMappingURL=compgeo.js.map

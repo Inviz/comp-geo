@@ -1,11 +1,14 @@
-require("babel-core/register")({
-	blacklist: ['regenerator', 'es6.forOf'],
-	optional: ['es7.classProperties']
-});
+// require("babel-core/register")({
+// 	blacklist: ['regenerator', 'es6.forOf'],
+// 	optional: ['es7.classProperties']
+// });
 
 // import Clipper from './es6/clipper/clipper';
 // import Intersections from './es6/intersections/Intersections';
 // import PathCollisionCollection from './es6/shapes/PathCollisionCollection';
+
+import * as BabelPolyfill from 'babel-polyfill';
+
 import Skeleton from './skeleton/Skeleton';
 // import Circle from './es6/primitives/Circle';
 // import Curve from './es6/primitives/Curve';
@@ -19,12 +22,14 @@ import Pather from './helpers/Pather';
 import Shape from './shapes/Shape';
 // import Stroke from './es6/shapes/Stroke';
 
-export default {
+const out = {
 	Skeleton,
 	shapes: {
 		Path, Pather, Shape
 	}
-}
+};
+
+module.exports = out;
 
 // module.exports = {
 // 	Clipper: require('./es6/clipper/Clipper'),

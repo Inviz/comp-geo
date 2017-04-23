@@ -1,4 +1,4 @@
-import * as CompGeo from '../index';
+import * as CompGeo from '../es6/index';
 
 export function convex() {
   return new CompGeo.shapes.Pather([0, 0.25])
