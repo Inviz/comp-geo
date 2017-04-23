@@ -1,9 +1,10 @@
 import { clamp } from '../missing-stuff';
+import { create } from './Vector';
 
 var Vector2 = function (x, y) {
 	return Vector2.fromValues(x, y);
 };
-require("./Vector").create(2, Vector2);
+create(2, Vector2);
 
 let properties = {
 	"crossz": 	                    {value: crossz},

@@ -55,10 +55,185 @@ function isRoughly(a, b, epsilon) {
 	return Math.abs(a - b) <= (epsilon || ROUGHLY_EPSILON);
 }
 
+var VectorFactory = require("./VectorFactory");
+
+var _require = require("../code-builder");
+var SourceWriter = _require.SourceWriter;
+var CodeBuilder = _require.CodeBuilder;
+
+var aliases = ["x", "y", "z", "w", "q", "r", "s", "t", "u", "v", "i", "j", "k", "l", "m", "n", "o", "p"];
+
+function create(dimensions, destination) {
+	var createArray = new Array(dimensions);
+	for (var i = 0; i < dimensions; i++) {
+		createArray[i] = 0.0;
+	}var createSource = "\treturn [" + createArray.join(", ") + "];";
+	var createFunction = CodeBuilder.compile("create", [], createSource, "Vector" + dimensions);
+
+	var cloneSource = "\treturn out.slice();";
+	var cloneFunction = CodeBuilder.compile("clone", ["out"], cloneSource, "Vector" + dimensions);
+
+	var decomposed = aliases.slice(0, dimensions);
+	var fromSource = "\treturn [" + decomposed.join(", ") + "];";
+	var fromFunction = CodeBuilder.compile("fromSource", decomposed, fromSource, "Vector" + dimensions);
+	var averageFunction = function averageFunction(out, iterable) {
+		destination.set(out, 0, 0);
+		var n = 0;
+		var _iteratorNormalCompletion = true;
+		var _didIteratorError = false;
+		var _iteratorError = undefined;
+
+		try {
+			for (var _iterator = iterable[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+				var vector = _step.value;
+
+				destination.add(out, out, vector);
+				n++;
+			}
+		} catch (err) {
+			_didIteratorError = true;
+			_iteratorError = err;
+		} finally {
+			try {
+				if (!_iteratorNormalCompletion && _iterator.return) {
+					_iterator.return();
+				}
+			} finally {
+				if (_didIteratorError) {
+					throw _iteratorError;
+				}
+			}
+		}
+
+		return destination.scale(out, out, 1 / n);
+	};
+
+	var properties = {
+		"create": { value: createFunction },
+		"clone": { value: cloneFunction },
+		"fromValues": { value: fromFunction },
+		"average": { value: averageFunction }
+	};
+
+	Object.defineProperties(destination, properties);
+	//Object.defineProperties(fromFunction, properties);
+
+	var operations = {
+		"copy": { "function": function _function(cb, a) {
+				return a;
+			},
+			"arguments": ["out", "a"],
+			"types": ["vector", "vector"] },
+		"set": { "function": VectorFactory.set(aliases.slice(0, dimensions)),
+			"arguments": ["out"].concat(aliases.slice(0, dimensions)),
+			"types": aliases.slice(0, dimensions + 1).map(function (each) {
+				return "vector";
+			}) },
+
+		"add": { "function": VectorFactory.operation("+"),
+			"arguments": ["out", "a", "b"],
+			"types": ["vector", "vector", "vector"] },
+		"sub": { "function": VectorFactory.operation("-"),
+			"arguments": ["out", "a", "b"],
+			"types": ["vector", "vector", "vector"] },
+		"mul": { "function": VectorFactory.operation("*"),
+			"arguments": ["out", "a", "b"],
+			"types": ["vector", "vector", "vector"] },
+		"div": { "function": VectorFactory.operation("/"),
+			"arguments": ["out", "a", "b"],
+			"types": ["vector", "vector", "vector"] },
+		"min": { "function": VectorFactory.min,
+			"arguments": ["out", "a", "b"],
+			"types": ["vector", "vector", "vector"] },
+		"max": { "function": VectorFactory.max,
+			"arguments": ["out", "a", "b"],
+			"types": ["vector", "vector", "vector"] },
+
+		"scale": { "function": VectorFactory.operation("*"),
+			"arguments": ["out", "a", "b"],
+			"types": ["vector", "vector", "scalar"] },
+		"scaleAndAdd": { "function": VectorFactory.scaleAndAdd,
+			"arguments": ["out", "a", "b", "c"],
+			"types": ["vector", "vector", "vector", "scalar"] },
+		"lerp": { "function": VectorFactory.lerp,
+			"arguments": ["out", "a", "b", "t"],
+			"types": ["vector", "vector", "vector", "scalar"] },
+
+		"negate": { "function": VectorFactory.negate,
+			"arguments": ["out", "a"],
+			"types": ["vector", "vector"] },
+		"inverse": { "function": VectorFactory.inverse,
+			"arguments": ["out", "a"],
+			"types": ["vector", "vector"] },
+		"normalize": { "function": VectorFactory.normalize,
+			"arguments": ["out", "a"],
+			"types": ["vector", "vector"] },
+
+		"dot": { "function": VectorFactory.dot,
+			"arguments": ["a", "b"],
+			"types": ["vector", "vector"] },
+		"wellFormed": { "function": VectorFactory.wellFormed,
+			"arguments": ["a"],
+			"types": ["vector"] },
+		"squaredLength": { "function": VectorFactory.squaredLength,
+			"arguments": ["a"],
+			"types": ["vector"] },
+		"len": { "function": VectorFactory.length,
+			"arguments": ["a"],
+			"types": ["vector"] },
+		"squaredDistance": { "function": VectorFactory.squaredDistance,
+			"arguments": ["a", "b"],
+			"types": ["vector", "vector"] },
+		"dist": { "function": VectorFactory.distance,
+			"arguments": ["a", "b"],
+			"types": ["vector", "vector"] },
+		"sum": { "function": VectorFactory.sum,
+			"arguments": ["a"],
+			"types": ["vector"] }
+	};
+
+	for (var operationName in operations) {
+		var cb = new CodeBuilder(),
+		    source = new SourceWriter(),
+		    operation = operations[operationName],
+		    args = [];
+
+		cb.temporariesPool = aliases.slice();
+
+		var output = operation["arguments"][0] == "out";
+		for (var _i = output ? 1 : 0; _i < operation["arguments"].length; _i++) {
+			var name = operation["arguments"][_i],
+			    type = operation["types"][_i];
+			switch (type) {
+				case "scalar":
+					args.push(cb.scalar(name));
+					break;
+				case "vector":
+					args.push(cb.vector(dimensions, name));
+					break;
+				default:
+					throw "Unknown type for function argument";
+			}
+		}
+
+		var body = operation["function"].apply(null, [cb].concat(args));
+		if (output) body = cb.assign(cb.vector(dimensions, "out"), body);
+		body = cb.output(body);
+
+		source.tab();
+		cb.write(source, [body]);
+		source.untab();
+
+		var compiled = CodeBuilder.compile(operationName, operation["arguments"], source.string, "Vector" + dimensions);
+		//fromFunction[operationName] || Object.defineProperty(fromFunction, operationName, {value: compiled});
+		destination[operationName] || Object.defineProperty(destination, operationName, { value: compiled });
+	}
+}
+
 var Vector2 = function Vector2(x, y) {
 	return Vector2.fromValues(x, y);
 };
-require("./Vector").create(2, Vector2);
+create(2, Vector2);
 
 var properties = {
 	"crossz": { value: crossz },
@@ -128,7 +303,7 @@ var Vector3$1 = function Vector3$$1(x, y, z) {
 	return Vector3$$1.fromValues(x, y, z);
 };
 
-require("./Vector").create(3, Vector3$1);
+create(3, Vector3$1);
 Object.defineProperties(Vector3$1, {
 	"cross": { value: cross$1 }
 });
@@ -2133,7 +2308,7 @@ var OuterEdge = Symbol("OuterEdge");
 var StartCapEdge = Symbol("StartCapEdge");
 var EndCapEdge = Symbol("EndCapEdge");
 
-function create(path, isInfinite) {
+function create$1(path, isInfinite) {
 	// console.log('isclosed', path.isClosed);
 	return path.isClosed ? createClosedPath(path, isInfinite) : createOpenPath(path, isInfinite);
 }
@@ -4935,7 +5110,7 @@ var StraightSkeleton = function () {
 			this.caps = [new Ray$2(path.start, [b[1], -b[0]]), new Ray$2(path.start, a), new Ray$2(path.end, [d[1], -d[0]]), new Ray$2(path.end, c)];
 		}
 
-		this.wavefronts = create(path, this.length === infinity, this.cap).map(function (each) {
+		this.wavefronts = create$1(path, this.length === infinity, this.cap).map(function (each) {
 			return new SkeletonWavefront(_this, each, 0).initialise();
 		});
 
