@@ -1,4 +1,6 @@
-let VectorFactory = exports;
+let VectorFactory = {};
+
+export default VectorFactory;
 
 const ROUGHLY_EPSILON = 1e-4;
 let isRoughly = function(number, other, epsilon) {

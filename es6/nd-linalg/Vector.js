@@ -1,5 +1,6 @@
-var VectorFactory = require("./VectorFactory");
-var {SourceWriter, CodeBuilder} = require("../code-builder");
+import VectorFactory from './VectorFactory';
+import SourceWriter from '../code-builder/SourceWriter';
+import CodeBuilder from '../code-builder/CodeBuilder';
 
 var aliases = [
 		"x", "y", "z", "w",

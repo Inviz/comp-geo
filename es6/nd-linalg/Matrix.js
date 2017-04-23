@@ -1,6 +1,9 @@
-var VectorFactory = require("./VectorFactory");
+import VectorFactory from './VectorFactory';
+// var VectorFactory = require("./VectorFactory");
 var MatrixFactory = require("./MatrixFactory");
-var {SourceWriter, CodeBuilder} = require("../code-builder");
+import SourceWriter from '../code-builder/SourceWriter';
+import CodeBuilder from '../code-builder/CodeBuilder';
+// var {SourceWriter, CodeBuilder} = require("../code-builder");
 
 export function create(dimensions, destination) {
 	var length = dimensions * dimensions;

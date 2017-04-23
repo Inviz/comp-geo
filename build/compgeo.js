@@ -3,6 +3,8 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 require('babel-polyfill');
+var babelCore = require('babel-core');
+var babelParser = _interopDefault(require('babel-core/lib/helpers/parse.js'));
 var THREE = require('three');
 var cdt2d = _interopDefault(require('cdt2d'));
 var cleanPSLG = _interopDefault(require('clean-pslg'));
@@ -55,11 +57,955 @@ function isRoughly(a, b, epsilon) {
 	return Math.abs(a - b) <= (epsilon || ROUGHLY_EPSILON);
 }
 
-var VectorFactory = require("./VectorFactory");
+var VectorFactory = {};
 
-var _require = require("../code-builder");
-var SourceWriter = _require.SourceWriter;
-var CodeBuilder = _require.CodeBuilder;
+var ROUGHLY_EPSILON$1 = 1e-4;
+var min = function min(cb, a, b) {
+	return cb.map("Math.min", a, b);
+};
+var max = function max(cb, a, b) {
+	return cb.map("Math.max", a, b);
+};
+var inverse = function inverse(cb, a) {
+	return cb.map("1.0 /", a);
+};
+var negate = function negate(cb, a) {
+	return cb.map("[[negate]]", a);
+};
+var sum = function sum(cb, a) {
+	return cb.reduce("+", a)[0];
+};
+var average = function average(cb, a) {
+	return cb.apply("/", sum(cb, a), cb.scalar(a.length));
+};
+var dot = function dot(cb, a, b) {
+	return sum(cb, cb.map("*", a, b));
+};
+var squaredLength = function squaredLength(cb, a) {
+	return dot(cb, a, a);
+};
+var length = function length(cb, a) {
+	return cb.apply("sqrt", squaredLength(cb, a));
+};
+var wellFormed = function wellFormed(cb, a) {
+	return cb.reduce("&&", cb.map("&&", cb.map("Number.isFinite", a), cb.map("!Number.isNaN", a)))[0];
+};
+var squaredDistance = function squaredDistance(cb, a, b) {
+	return squaredLength(cb, cb.map("-", b, a));
+};
+var distance = function distance(cb, a, b) {
+	return cb.apply("sqrt", squaredDistance(cb, a, b));
+};
+var scaleAndAdd = function scaleAndAdd(cb, a, b, c) {
+	return cb.map("+", a, cb.map("*", b, c));
+};
+var lerp = function lerp(cb, a, b, c) {
+	return cb.map("+", a, cb.map("*", c, cb.map("-", b, a)));
+};
+
+function set(args) {
+	return function (cb, out) {
+		return args.map(function (each) {
+			return cb.scalar(each);
+		});
+	};
+}
+
+function operation(op) {
+	return function operation(cb, a, b) {
+		return cb.map(op, a, b);
+	};
+}
+
+function normalize(cb, a) {
+	// (||a||^2) > 0 ? a.(1/||a||) : 0
+	var zero = cb.scalar("0"),
+	    condition = [squaredLength(cb, a), ">", zero],
+	    scalingLength = cb.phi(condition, cb.apply("1.0 /", length(cb, a)), zero, "length");
+	return cb.map("*", a, scalingLength);
+}
+
+function isRoughlyVec(a, b, epsilon) {
+	return Math.abs(a[0] - b[0]) <= (epsilon || ROUGHLY_EPSILON$1) && Math.abs(a[1] - b[1]) <= (epsilon || ROUGHLY_EPSILON$1);
+}
+
+Object.defineProperties(VectorFactory, {
+	"set": { value: set },
+	"operation": { value: operation },
+	"min": { value: min },
+	"max": { value: max },
+	"scaleAndAdd": { value: scaleAndAdd },
+	"inverse": { value: inverse },
+	"dot": { value: dot },
+	"squaredLength": { value: squaredLength },
+	"length": { value: length },
+	"wellFormed": { value: wellFormed },
+	"squaredDistance": { value: squaredDistance },
+	"distance": { value: distance },
+	"negate": { value: negate },
+	"sum": { value: sum },
+	"average": { value: average },
+	"normalize": { value: normalize },
+	"lerp": { value: lerp },
+	"isRoughly": { value: isRoughlyVec }
+});
+
+/* SourceWriter, by Michael Lucas-Smith (c) 2014
+
+ Very simple tool for writing out lines of source code
+ while keeping track of tabbing depth and auto-tabbing
+ based on trailing { and } bracketing.
+
+ */
+
+function SourceWriter() {
+	this.depth = 0;
+	this.string = "";
+	this.last = null;
+	this.storemode = " = ";
+	this.newlinemode = ";";
+}
+SourceWriter.prototype.write = function (line) {
+	if (!line) {
+		console.trace();
+		console.error("Expected a line");
+	}
+
+	this.last = line[line.length - 1];
+	this.string += line;
+};
+SourceWriter.prototype.writeln = function (line) {
+	line = line || "";
+	if (line.length > 0) {
+		this.last = line[line.length - 1];
+	}
+	if (this.last == "{") {
+		this.writeTabs();
+		this.string += line;
+		this.tab();
+	} else if (this.last == "}") {
+		this.untab();
+		this.writeTabs();
+		this.string += line;
+	} else if (this.last == "," || this.last == ";") {
+		this.writeTabs();
+		this.string += line;
+	} else {
+		this.writeTabs();
+		this.string += line + this.newlinemode;
+	}
+	this.string += "\n";
+	this.last = null;
+};
+SourceWriter.prototype.forloop = function (indexVariable, lengthVariable) {
+	this.writeln("for (var " + indexVariable + " = 0; " + indexVariable + " < " + lengthVariable + "; " + indexVariable + "++) {");
+};
+SourceWriter.prototype.store = function (destination, source) {
+	this.writeln(destination + this.storemode + source);
+};
+SourceWriter.prototype.tab = function () {
+	this.depth++;
+};
+SourceWriter.prototype.untab = function () {
+	this.depth--;
+	if (this.depth < 0) {
+		console.trace();
+		console.error("Unbalanced tabs in source writer");
+	}
+};
+SourceWriter.prototype.writeTabs = function () {
+	for (var i = 0; i < this.depth; i++) {
+		this.string += "\t";
+	}
+};
+SourceWriter.prototype.assertBalance = function () {
+	if (this.depth != 0) {
+		console.error("Unbalanced tabs");
+	}
+};
+
+function metaEval(source, environment, alias, filename, sourceUrlBase, options) {
+
+	filename = filename || alias;
+	options = options || {};
+
+	if (options.transpile) {
+		try {
+			source = babelCore.transform(source, {
+				blacklist: ["regenerator", "es6.tailCall"],
+				loose: ["es6.forOf"],
+				optional: ["es7.classProperties"],
+				filename: filename
+			}).code;
+		} catch (e) {
+			if (e instanceof SyntaxError) {
+				logSyntaxError(source, e);
+				return;
+			} else throw e;
+		}
+	}
+
+	alias = alias || "anonymousMetaProgram" + createKuid();
+	source = source + "\n//# sourceURL=" + sourceUrlBase + filename;
+
+	var executable = Object.create(Function.prototype);
+	var wrapperSource = "   // this function evaluates " + alias + "\n\n\t// catch syntax errors early\n\ttry {__parse(source);}\n\tcatch(e) {\n\t\tif (e instanceof SyntaxError) {\n\t\t\t__logSyntaxError(source, e);\n\t\t\treturn;\n\t\t} else throw e;\n\t}\n\n\teval(source);\n\t";
+
+	if (options.wrapperFileListed) wrapperSource += "//# sourceURL=" + (sourceUrlBase + "metaEval/" + alias);
+
+	environment.__logSyntaxError = logSyntaxError;
+	environment.__parse = babelParser;
+
+	var wrapperParameters = ["source"].concat(Object.keys(environment)).concat([wrapperSource]);
+	var wrapperFunction = Function.prototype.constructor.apply(executable, wrapperParameters);
+
+	var environmentValues = Object.keys(environment).map(function (k) {
+		return environment[k];
+	});
+	var wrapperArguments = [source].concat(environmentValues);
+
+	wrapperFunction.apply(executable, wrapperArguments);
+
+	return environment;
+}
+
+function logSyntaxError(source, e) {
+	if (e.loc) {
+		console.error(source.split(/\n/).slice(0, e.loc.line).map(function (l, i) {
+			return i + ":\t" + l;
+		}).join("\n") + "\n" + (e.loc.line + "").replace(/./g, "!") + "!\t" + source.split(/\n/)[e.loc.line - 1].slice(0, e.loc.column).replace(/[^\t]/g, "-") + "^");
+	}
+	console.error(e);
+}
+
+// kinda unique id
+function createKuid() {
+	return 'xxxxxxxx'.replace(/[xy]/g, function (c) {
+		var r = Math.random() * 16 | 0,
+		    v = c === 'x' ? r : r & 0x3 | 0x8;
+		return v.toString(16);
+	});
+}
+
+var DEBUG_SHOW_COMPILATION = false;
+
+var ALLOW_ALIASING_OF_FIELDS = true;
+var ALLOW_ALIASING_OF_EXPRESSIONS = true;
+
+Object.defineProperties(CodeBuilder, {
+	"compile": { value: compile }
+});
+
+function CodeBuilder() {
+	this.tempCounter = 0;
+	this.phiCounter = 0;
+	this.assignments = [];
+	this.identities = [];
+	this.temporariesPool = [];
+	this.taken = [];
+}
+
+Object.defineProperties(CodeBuilder.prototype, {
+	// variables
+	"scalar": { value: scalar },
+	"vector": { value: vector },
+	"matrix": { value: matrix },
+
+	// state
+	"assign": { value: assign },
+
+	// transformation
+	"map": { value: map },
+	"reduce": { value: reduce },
+	"apply": { value: apply },
+
+	// execution flow
+	"phi": { value: phi },
+	"output": { value: output },
+
+	// generating sourceode
+	"write": { value: write }
+});
+
+function compile(name, args, sourceBody, context, environment) {
+	if (DEBUG_SHOW_COMPILATION) {
+		console.group(name);
+		console.log(source);
+		console.groupEnd(name);
+	}
+
+	context = context || "unknown";
+	environment = environment || {};
+
+	var source = "\"use strict\";\n// this is auto-generated code\n\tvar sqrt = Math.sqrt;\n\texports[\"" + name + "\"] = function " + name + "(" + args.join(", ") + ") {\n\t\t" + sourceBody + "}";
+
+	var functionExports = {};
+	environment.exports = functionExports;
+
+	metaEval(source, environment, "CodeBuilder:" + context + ":" + name, "codeBuilder/" + context + "/" + name, "dependencies://code-builder/");
+
+	return functionExports[name];
+}
+
+function register(builder, variable) {
+	variable.id = builder.identities.length;
+	variable.references = 0;
+	builder.identities.push(variable);
+	return variable;
+}
+
+function lookup(builder, type, operation, variables) {
+	function compare(x) {
+		if (type != x.type || operation != x.operation || variables.length != x.variables.length) return false;
+		for (var _i = 0; _i < variables.length; _i++) {
+			if (variables[_i].id !== x.variables[_i].id) return false;
+		}return true;
+	}
+
+	for (var i = 0; i < builder.identities.length; i++) {
+		if (compare(builder.identities[i])) return builder.identities[i];
+	}return null;
+}
+
+function nameit(builder, variable) {
+	var istaken = function istaken(name) {
+		return builder.taken.indexOf(name) != -1;
+	};
+	if (variable.type == "field" && variable.parent.type == "vector") {
+		if (!variable.parent.isMatrix) {
+			// try to name the variables ax, ay, az, etc...
+			if (variable.index >= 0 && variable.index <= 4) {
+				var _name = variable.parent.name + ["x", "y", "z", "w"][variable.index];
+				if (!istaken(_name)) return _name;
+			}
+			// try to name the variables a0, a1, a2, etc...
+			var name = variable.parent.name + variable.index;
+			if (!istaken(name)) return name;
+		} else {
+			// try to name the variables m{row}{column}, eg m01, m02, m10, etc...
+			var dimensions = Math.sqrt(variable.parent.length),
+			    row = Math.floor(variable.index / dimensions),
+			    column = variable.index - row * dimensions,
+			    _name2 = variable.parent.name + row + column;
+			if (!istaken(_name2)) return _name2;
+		}
+	}
+	if (builder.temporariesPool.length > 0) {
+		var _name3 = builder.temporariesPool[0];
+		builder.temporariesPool = builder.temporariesPool.slice(1);
+		return _name3;
+	} else {
+		return "temp" + builder.tempCounter++;
+	}
+}
+
+function reference(builder, variables) {
+	var _iteratorNormalCompletion = true;
+	var _didIteratorError = false;
+	var _iteratorError = undefined;
+
+	try {
+		for (var _iterator = variables[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+			var variable = _step.value;
+
+			if (!variable.canAlias) continue;
+
+			variable.references++;
+			if (variable.references == 2) {
+				var name = nameit(builder, variable);
+				var position = builder.assignments.length;
+				var expression = void 0;
+				if (variable.assignment) {
+					position = builder.assignments.indexOf(variable.assignment.before);
+					expression = variable.assignment.expression;
+				} else {
+					if (!ALLOW_ALIASING_OF_EXPRESSIONS) continue;
+
+					expression = variable.toString(false);
+				}
+				var assignment = {
+					"name": name,
+					"expression": expression,
+					"declare": true
+				};
+				builder.assignments.splice(position, 0, assignment);
+
+				builder.taken.push(name);
+				variable.name = name;
+				variable.canAlias = false;
+			}
+		}
+	} catch (err) {
+		_didIteratorError = true;
+		_iteratorError = err;
+	} finally {
+		try {
+			if (!_iteratorNormalCompletion && _iterator.return) {
+				_iterator.return();
+			}
+		} finally {
+			if (_didIteratorError) {
+				throw _iteratorError;
+			}
+		}
+	}
+}
+
+var MAX_ELEMENTS_SIZE = 16;
+function accessors(prototype) {
+	var _marked = [foreach].map(regeneratorRuntime.mark);
+
+	function foreach() {
+		var i;
+		return regeneratorRuntime.wrap(function foreach$(_context) {
+			while (1) {
+				switch (_context.prev = _context.next) {
+					case 0:
+						i = 0;
+
+					case 1:
+						if (!(i < this.length)) {
+							_context.next = 7;
+							break;
+						}
+
+						_context.next = 4;
+						return this.get(i);
+
+					case 4:
+						i++;
+						_context.next = 1;
+						break;
+
+					case 7:
+					case "end":
+						return _context.stop();
+				}
+			}
+		}, _marked[0], this);
+	}
+	function toString(bracketsMode) {
+		if (this.name) return this.name;
+		if (this.needsBrackets && bracketsMode !== false) return "(" + this.source() + ")";
+		return this.source();
+	}
+	Object.defineProperty(prototype, Symbol.iterator, { value: foreach });
+	Object.defineProperty(prototype, "map", { value: Array.prototype.map });
+	Object.defineProperty(prototype, "toString", { value: toString });
+
+	var _loop = function _loop(i) {
+		Object.defineProperty(prototype, i, { get: function get() {
+				return this.get(i);
+			} });
+	};
+
+	for (var i = 0; i < MAX_ELEMENTS_SIZE; i++) {
+		_loop(i);
+	}
+}
+
+function ScalarVariable(builder, name) {
+	register(builder, this);
+	builder.taken.push(name);
+	this.name = name;
+}
+Object.defineProperties(ScalarVariable.prototype, {
+	"type": { value: "scalar" },
+	"canAlias": { value: false },
+	"length": { value: 1 },
+	"get": { value: function value() {
+			return this;
+		} },
+	"isVector": { value: false },
+	"needsBrackets": { value: false }
+});
+
+function VectorVariable(builder, lengthOrFields, name) {
+	register(builder, this);
+	builder.taken.push(name);
+	this.name = name;
+	if (lengthOrFields instanceof Array) {
+		this.length = lengthOrFields.length;
+		this.fields = lengthOrFields.slice();
+	} else {
+		this.length = lengthOrFields;
+		this.fields = new Array(this.length);
+		for (var i = 0; i < this.length; i++) {
+			this.fields[i] = new FieldVariable(builder, this, i);
+		}
+	}
+}
+Object.defineProperties(VectorVariable.prototype, {
+	"type": { value: "vector" },
+	"canAlias": { value: false },
+	"get": { value: function value(i) {
+			return this.fields[i];
+		} },
+	"isVector": { value: true },
+	"needsBrackets": { value: false }
+});
+
+function FieldVariable(builder, parent, index) {
+	register(builder, this);
+	this.parent = parent;
+	this.index = index;
+	this.canAlias = ALLOW_ALIASING_OF_FIELDS;
+}
+Object.defineProperties(FieldVariable.prototype, {
+	"type": { value: "field" },
+	"length": { value: 1 },
+	"get": { value: function value() {
+			return this;
+		} },
+	"source": { value: function value() {
+			return this.parent.toString() + "[" + this.index + "]";
+		} },
+	"isVector": { value: false },
+	"needsBrackets": { value: false },
+	"_name": { get: function get() {
+			return this.toString();
+		} }
+});
+
+function Apply(builder, operation, variables) {
+	register(builder, this);
+	this.operation = operation;
+	this.variables = variables;
+	this.canAlias = true;
+	this.needsBrackets = false;
+
+	reference(builder, variables);
+
+	var isNegative = function isNegative(variable) {
+		return variable.toString()[0] == "-";
+	};
+
+	if (operation[0] == "." && operation[1] == ".") {
+		if (variables.length > 1) throw "Use map, not apply";
+		this.transform = function () {
+			return variables[0].toString() + operation.slice(1);
+		};
+	} else if (operation == "[[negate]]") {
+		if (variables.length > 1) throw "Use map, not apply";
+		if (isNegative(variables[0])) this.transform = function () {
+			return variables[0].toString();
+		};else this.transform = function () {
+			return "-" + variables[0].toString();
+		};
+	} else if (operation.length > 2 && operation[operation.length - 1] == "/") {
+		if (variables.length > 1) throw "Use map, not apply";
+		this.transform = function () {
+			return operation + " " + variables[0].toString();
+		};
+	} else if (operation[0] == ".") this.transform = function () {
+		return variables[0].toString() + operation + "(" + variables.slice(1).map(function (each) {
+			return each.toString(false);
+		}).join(", ") + ")";
+	};else if (operation == "+" || operation == "-") {
+		var positivefirst = function positivefirst(a, b) {
+			return a.isNegative ? b.isNegative ? 0 : 1 : b.isNegative ? -1 : 0;
+		};
+
+		/* Reorder the variables so that positive operations come first */
+		var vars = [];
+		var _iteratorNormalCompletion2 = true;
+		var _didIteratorError2 = false;
+		var _iteratorError2 = undefined;
+
+		try {
+			var _loop2 = function _loop2() {
+				var variable = _step2.value;
+
+				var negative = isNegative(variable);
+				vars.push({
+					"isNegative": variable !== variables[0] && operation == "-" ? !negative : negative,
+					"toString": function toString(needsBrackets) {
+						var string = variable.toString(false);
+						if (negative) string = string.slice(1);
+						if (this.needsBrackets && bracketsMode !== false) string = "(" + string + ")";
+						return string;
+					}
+				});
+			};
+
+			for (var _iterator2 = variables[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+				_loop2();
+			}
+		} catch (err) {
+			_didIteratorError2 = true;
+			_iteratorError2 = err;
+		} finally {
+			try {
+				if (!_iteratorNormalCompletion2 && _iterator2.return) {
+					_iterator2.return();
+				}
+			} finally {
+				if (_didIteratorError2) {
+					throw _iteratorError2;
+				}
+			}
+		}
+
+		vars.sort(positivefirst);
+
+		var negateAtEnd = vars.length > 1 && vars[0].isNegative;
+		if (negateAtEnd) {
+			var _iteratorNormalCompletion3 = true;
+			var _didIteratorError3 = false;
+			var _iteratorError3 = undefined;
+
+			try {
+				for (var _iterator3 = vars[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+					var _each = _step3.value;
+
+					_each.isNegative = !_each.isNegative;
+				}
+			} catch (err) {
+				_didIteratorError3 = true;
+				_iteratorError3 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion3 && _iterator3.return) {
+						_iterator3.return();
+					}
+				} finally {
+					if (_didIteratorError3) {
+						throw _iteratorError3;
+					}
+				}
+			}
+		} /*console.log(vars);
+     console.log("negateAtEnd", negateAtEnd);
+     console.log("variables", variables.map(e => e.toString(false)).join(" " + operation + " "));
+     console.log("sort vars", vars.map(e => (e.isNegative ? "-" : "") + e.toString(false)));*/
+
+		this.transform = function () {
+			var string = "",
+			    first = vars[0];
+			var _iteratorNormalCompletion4 = true;
+			var _didIteratorError4 = false;
+			var _iteratorError4 = undefined;
+
+			try {
+				for (var _iterator4 = vars[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+					var variable = _step4.value;
+
+					if (variable !== first) {
+						string += " " + (variable.isNegative ? "-" : "+") + " ";
+					}
+					string += variable.toString(false);
+				}
+			} catch (err) {
+				_didIteratorError4 = true;
+				_iteratorError4 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion4 && _iterator4.return) {
+						_iterator4.return();
+					}
+				} finally {
+					if (_didIteratorError4) {
+						throw _iteratorError4;
+					}
+				}
+			}
+
+			if (negateAtEnd) string = "-(" + string + ")";
+			return string;
+		};
+		this.needsBrackets = !negateAtEnd;
+	} else if (operation == "*" || operation == "/" || operation == "&&" || operation == "||") {
+		this.transform = function () {
+			return variables.map(function (each) {
+				return each.toString();
+			}).join(" " + operation + " ");
+		};
+		this.needsBrackets = true;
+	} else if (operation == "[]") {
+		this.transform = function () {
+			return "[" + variables.map(function (each) {
+				return each.toString(false);
+			}).join(", ") + "]";
+		};
+	} else this.transform = function () {
+		return operation + "(" + variables.map(function (each) {
+			return each.toString(false);
+		}).join(", ") + ")";
+	};
+}
+Object.defineProperties(Apply.prototype, {
+	"type": { value: "apply" },
+	"length": { value: 1 },
+	"get": { value: function value() {
+			return this;
+		} },
+	"source": { value: function value() {
+			return this.transform();
+		} },
+	"isVector": { value: false }
+});
+
+function Reduction(builder, operation, variables) {
+	register(builder, this);
+	this.operation = operation;
+	this.variables = variables;
+	this.fields = variables.map(function (each) {
+		return new Apply(builder, operation, each);
+	});
+	this.length = variables.length;
+	this.canAlias = true;
+}
+Object.defineProperties(Reduction.prototype, {
+	"type": { value: "reduce" },
+	"get": { value: function value(i) {
+			return this.fields[i];
+		} },
+	"source": { value: function value() {
+			return "[" + this.fields.map(function (each) {
+				return each.toString(false);
+			}).join(", ") + "]";
+		} },
+	"isVector": { value: true },
+	"needsBrackets": { value: false }
+});
+
+function Mapping(builder, operation, variables) {
+	register(builder, this);
+	this.operation = operation;
+	this.variables = variables;
+	this.canAlias = true;
+	this.length = 0;
+	var _iteratorNormalCompletion5 = true;
+	var _didIteratorError5 = false;
+	var _iteratorError5 = undefined;
+
+	try {
+		for (var _iterator5 = variables[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+			var _variable = _step5.value;
+
+			this.length = Math.max(this.length, _variable.length);
+		}
+	} catch (err) {
+		_didIteratorError5 = true;
+		_iteratorError5 = err;
+	} finally {
+		try {
+			if (!_iteratorNormalCompletion5 && _iterator5.return) {
+				_iterator5.return();
+			}
+		} finally {
+			if (_didIteratorError5) {
+				throw _iteratorError5;
+			}
+		}
+	}
+
+	this.fields = new Array(this.length);
+	for (var i = 0; i < this.length; i++) {
+		var column = new Array(variables.length);
+		for (var j = 0; j < variables.length; j++) {
+			column[j] = variables[j].length === 1 ? variables[j][0] : variables[j][i];
+		}this.fields[i] = new Apply(builder, operation, column);
+	}
+}
+Object.defineProperties(Mapping.prototype, {
+	"type": { value: "map" },
+	"get": { value: function value(i) {
+			return this.fields[i];
+		} },
+	"source": { value: function value() {
+			return "[" + this.fields.map(function (each) {
+				return each.toString(false);
+			}).join(", ") + "]";
+		} },
+	"isVector": { value: true },
+	"needsBrackets": { value: false }
+});
+
+function Output(variable) {
+	this.toString = function () {
+		return "return " + variable.toString(false);
+	};
+}
+Object.defineProperties(Output.prototype, {
+	"type": { value: "output" },
+	"canAlias": { value: false },
+	"source": { value: function value() {
+			throw "Inapplicable";
+		} }
+});
+
+accessors(ScalarVariable.prototype);
+accessors(VectorVariable.prototype);
+accessors(FieldVariable.prototype);
+accessors(Apply.prototype);
+accessors(Reduction.prototype);
+accessors(Mapping.prototype);
+
+function scalar(name) {
+	return new ScalarVariable(this, name);
+}
+
+function vector(lengthOrFields, name) {
+	return new VectorVariable(this, lengthOrFields, name);
+}
+
+function matrix(dimensionsOrFields, name) {
+	var m = dimensionsOrFields instanceof Array ? this.vector(dimensionsOrFields, name) : this.vector(dimensionsOrFields * dimensionsOrFields, name);
+	m.isMatrix = true;
+	return m;
+}
+
+// apply: with an operation, apply things and return a same-sized mapping
+// apply("+", a, b)
+// ->	a + b
+function apply(operation) {
+	var variables = Array.prototype.slice.call(arguments, 1);
+	if (!variables.length) throw "Nothing to apply";
+
+	var existing = lookup(this, Apply.prototype.type, operation, variables);
+	if (existing) {
+		reference(this, variables);
+		return existing;
+	}
+
+	return new Apply(this, operation, variables);
+}
+
+// reduce: with an operation, reduce variables of 'n' dimensions down to 1 dimension
+// reduce("+", a, b)
+// ->	[a[0] + a[1] + a[2] + a[3],
+//		 b[0] + b[1] + b[2] + b[3]...]
+function reduce(operation) {
+	var variables = Array.prototype.slice.call(arguments, 1);
+	if (!variables.length) throw "Nothing to reduce";
+
+	return lookup(this, Reduction.prototype.type, operation, variables) || new Reduction(this, operation, variables);
+}
+
+// map: with an operation, apply variables of 'n' dimensions and return same-sized mapping
+// map("+", a, b)
+// -> 	[a[0] + b[0],
+//		 a[1] + b[1],
+//		 a[2] + b[2],
+//		 a[3] + b[3]...]
+function map(operation) {
+	var variables = Array.prototype.slice.call(arguments, 1);
+	if (!variables.length) throw "Nothing to map";
+
+	return lookup(this, Mapping.prototype.type, operation, variables) || new Mapping(this, operation, variables);
+}
+
+function assign(output, input) {
+	if (output.type != "vector") throw "Cannot assign to anything but a vector";
+
+	for (var i = 0; i < output.length; i++) {
+		var out_ = output[i],
+		    in_ = input[i];
+		if (out_ !== in_) {
+			// whatever it is we're accessing, make sure we note that
+			reference(this, [in_]);
+
+			var name = out_.toString(),
+			    assignment = {
+				"name": name,
+				"expression": in_.toString(false),
+				"declare": false };
+
+			// at least on reference so the next access actualises the assignment
+			if (out_.canAlias) {
+				out_.references = 1;
+				out_.assignment = {
+					"before": assignment,
+					"expression": name
+				};
+			}
+
+			this.assignments.push(assignment);
+		}
+	}
+	return output;
+}
+
+function output(variable) {
+	return new Output(variable);
+}
+
+function phi(test, success, failure, name) {
+	if (!name) name = "phi" + (this.phiCounter ? this.phiCounter + 1 : "");
+	if (this.taken.indexOf(name) != -1) {
+		for (var i = 0; i < 9; i++) {
+			if (this.taken.indexOf(name) == -1) {
+				name = name + i;
+				break;
+			}
+		}name = "phi" + (this.phiCounter ? this.phiCounter + 1 : "");
+	}
+
+	reference(this, [test[0], test[2]]);
+	if (success.isVector !== failure.isVector) throw "Base types must be the same";
+
+	this.taken.push(name);
+	this.phiCounter++;
+	this.assignments.push({
+		"name": name,
+		"expression": test[0].toString() + " " + test[1] + " " + test[2].toString() + " ? " + success.toString(false) + " : " + failure.toString(false),
+		"declare": true
+	});
+
+	return success.isVector ? this.vector(Math.max(success.length, failure.length), name) : this.scalar(name);
+}
+
+function write(source, statements) {
+	var isDeclaring = false,
+	    last = this.assignments[this.assignments.length - 1];
+
+	for (var i = 0; i < this.assignments.length; i++) {
+		var assignment = this.assignments[i],
+		    declare = assignment.declare,
+		    isLast = assignment === last,
+		    isDeclarationStart = !isDeclaring && declare,
+		    isDeclarationStop = declare && (isLast || !this.assignments[i + 1].declare),
+		    prefix = declare && isDeclarationStart ? "let " : "",
+		    suffix = !declare || isDeclarationStop ? ";" : ",";
+
+		source.writeln("" + prefix + assignment.name + " = " + assignment.expression + suffix);
+		if (isDeclarationStart) {
+			isDeclaring = true;
+			isDeclarationStop || source.tab();
+		}
+		if (isDeclarationStop) {
+			isDeclaring = false;
+			isDeclarationStart || source.untab();
+		}
+	}
+	isDeclaring && source.untab();
+
+	var _iteratorNormalCompletion6 = true;
+	var _didIteratorError6 = false;
+	var _iteratorError6 = undefined;
+
+	try {
+		for (var _iterator6 = statements[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+			var statement = _step6.value;
+
+			source.writeln(statement.toString());
+		}
+	} catch (err) {
+		_didIteratorError6 = true;
+		_iteratorError6 = err;
+	} finally {
+		try {
+			if (!_iteratorNormalCompletion6 && _iterator6.return) {
+				_iterator6.return();
+			}
+		} finally {
+			if (_didIteratorError6) {
+				throw _iteratorError6;
+			}
+		}
+	}
+}
 
 var aliases = ["x", "y", "z", "w", "q", "r", "s", "t", "u", "v", "i", "j", "k", "l", "m", "n", "o", "p"];
 
@@ -67,14 +1013,14 @@ function create(dimensions, destination) {
 	var createArray = new Array(dimensions);
 	for (var i = 0; i < dimensions; i++) {
 		createArray[i] = 0.0;
-	}var createSource = "\treturn [" + createArray.join(", ") + "];";
+	}var createSource = '\treturn [' + createArray.join(", ") + '];';
 	var createFunction = CodeBuilder.compile("create", [], createSource, "Vector" + dimensions);
 
-	var cloneSource = "\treturn out.slice();";
+	var cloneSource = '\treturn out.slice();';
 	var cloneFunction = CodeBuilder.compile("clone", ["out"], cloneSource, "Vector" + dimensions);
 
 	var decomposed = aliases.slice(0, dimensions);
-	var fromSource = "\treturn [" + decomposed.join(", ") + "];";
+	var fromSource = '\treturn [' + decomposed.join(", ") + '];';
 	var fromFunction = CodeBuilder.compile("fromSource", decomposed, fromSource, "Vector" + dimensions);
 	var averageFunction = function averageFunction(out, iterable) {
 		destination.set(out, 0, 0);
@@ -1119,15 +2065,15 @@ function midpoint() {
 	return midpoint;
 }
 
-var min = Math.min;
-var max = Math.max;
+var min$1 = Math.min;
+var max$1 = Math.max;
 function boundingBox() {
 	var origin = Vector2.clone(this.start);
 	var corner$$1 = Vector2.clone(this.start);
-	origin[0] = min(origin[0], this.end[0]);
-	origin[1] = min(origin[1], this.end[1]);
-	corner$$1[0] = max(corner$$1[0], this.end[0]);
-	corner$$1[1] = max(corner$$1[1], this.end[1]);
+	origin[0] = min$1(origin[0], this.end[0]);
+	origin[1] = min$1(origin[1], this.end[1]);
+	corner$$1[0] = max$1(corner$$1[0], this.end[0]);
+	corner$$1[1] = max$1(corner$$1[1], this.end[1]);
 	return newRectangleCorner(origin, corner$$1);
 }
 
@@ -1346,7 +2292,7 @@ function draw$4(context) {
 }
 
 var TIME_EPSILON = 1e-8;
-var max$1 = Math.max;
+var max$2 = Math.max;
 var infinity$3 = Infinity;
 var id$3 = 0;
 
@@ -1585,7 +2531,7 @@ var SkeletonWavefront = function () {
 				} else if (eventTime < infinity$3 && roughlyEqual$1(eventTime, time, TIME_EPSILON)) {
 					//console.log("testing", event.description(), "<", "~" + time);
 					events.push(event);
-					maxtime = max$1(maxtime, eventTime);
+					maxtime = max$2(maxtime, eventTime);
 				} else {
 					//console.log("testing", event.description(), "skipped");
 					return false;

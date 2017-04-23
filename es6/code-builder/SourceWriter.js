@@ -73,4 +73,4 @@ SourceWriter.prototype.assertBalance = function() {
 	if (this.depth != 0) { console.error("Unbalanced tabs"); }
 }
 
-module.exports = SourceWriter;
+export default SourceWriter;

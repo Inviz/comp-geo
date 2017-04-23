@@ -15,7 +15,9 @@ export default {
     'three',
     'cdt2d',
     'clean-pslg',
-    'babel-polyfill'
+    'babel-polyfill',
+    'babel-core',
+    'babel-core/lib/helpers/parse.js'
   ],
 
   plugins: [

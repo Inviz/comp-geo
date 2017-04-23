@@ -5,8 +5,6 @@ var DEBUG_SHOW_COMPILATION = false;
 var ALLOW_ALIASING_OF_FIELDS = true;
 var ALLOW_ALIASING_OF_EXPRESSIONS = true;
 
-module.exports = CodeBuilder;
-
 Object.defineProperties(CodeBuilder, {
 	"compile": {value: compile},
 });
@@ -19,6 +17,9 @@ function CodeBuilder() {
 	this.temporariesPool = [];
 	this.taken = [];
 }
+
+export default CodeBuilder;
+
 Object.defineProperties(CodeBuilder.prototype, {
 	// variables
 	"scalar": 		{value: scalar},
