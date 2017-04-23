@@ -1,5 +1,5 @@
 import intersect from '../intersections/Intersections';
-import {Vector2 as vec2} from '../nd-linalg';
+import vec2 from '../nd-linalg/Vector2';
 import LineSegment from './LineSegment';
 import Ray from './Ray';
 import Rectangle from './Rectangle';

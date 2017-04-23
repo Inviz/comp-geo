@@ -1,10 +1,10 @@
-import { Vector2 as vec2 } from '../nd-linalg';
-import { Vector3 as vec3 } from '../nd-linalg';
+import vec2 from '../nd-linalg/Vector2';
+import vec3 from '../nd-linalg/Vector3';
 import { roughlyEqual } from '../missing-stuff';
-import Ray from '../primitives/ray';
-import Line from '../primitives/line';
-import intersect from '../intersections/intersections';
-import SkeletonSplitEvent from './skeletonsplitevent';
+import Ray from '../primitives/Ray';
+import Line from '../primitives/Line';
+import intersect from '../intersections/Intersections';
+import SkeletonSplitEvent from './SkeletonSplitEvent';
 
 var id = 0;
 export default class SkeletonVertex {

@@ -16,7 +16,8 @@ let properties = {
 }
 
 Object.defineProperties(Vector2, properties);
-module.exports = Vector2;
+// module.exports = Vector2;
+export default Vector2
 
 function crossz(a, b) {
 	return a[0] * b[1] - b[0] * a[1];

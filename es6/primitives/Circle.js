@@ -1,5 +1,5 @@
 import intersect, {THICKNESS} from '../intersections/Intersections';
-import {Vector2 as vec2} from '../nd-linalg';
+import vec2 from '../nd-linalg/Vector2';
 import {angleFrom} from '../helpers/Angles';
 
 export default Circle;

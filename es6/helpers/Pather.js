@@ -1,4 +1,4 @@
-import {Vector2 as vec2} from '../nd-linalg';
+import vec2 from '../nd-linalg/Vector2';
 import Path from '../shapes/Path';
 import LineSegment from '../primitives/LineSegment';
 import Curve from '../primitives/Curve';

@@ -1,7 +1,7 @@
 import intersect from '../intersections/Intersections';
-import {Vector2 as vec2} from '../nd-linalg';
+import vec2 from '../nd-linalg/Vector2';
 import {corner as RectangleCorner} from './Rectangle';
-import * as Triangle from './triangle';
+import * as Triangle from './Triangle';
 import { roughlyEqual, roughlyBetween } from '../missing-stuff';
 // import { colinear } from triangle;
 

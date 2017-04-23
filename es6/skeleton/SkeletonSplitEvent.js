@@ -1,11 +1,11 @@
-import Ray from '../primitives/ray';
-import Line from '../primitives/line';
-import intersect from '../intersections/intersections';
-import { Vector2 as vec2 } from '../nd-linalg';
-import { Vector3 as vec3 } from '../nd-linalg';
+import Ray from '../primitives/Ray';
+import Line from '../primitives/Line';
+import intersect from '../intersections/Intersections';
+import vec2 from '../nd-linalg/Vector2';
+import vec3 from '../nd-linalg/Vector3';
 import { roughlyEqual } from '../missing-stuff';
-import * as SkeletonEdge from './skeletonedge';
-import SkeletonWavefront from './skeletonwavefront';
+import * as SkeletonEdge from './SkeletonEdge';
+import SkeletonWavefront from './SkeletonWavefront';
 
 var id = 0;
 var infinity = Infinity;

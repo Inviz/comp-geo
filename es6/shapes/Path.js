@@ -1,5 +1,5 @@
-import intersect from '../intersections/intersections';
-import {Vector2 as vec2} from '../nd-linalg';
+import intersect from '../intersections/Intersections';
+import vec2 from '../nd-linalg/Vector2';
 import LineSegment from '../primitives/LineSegment';
 import Curve from '../primitives/Curve';
 import {corner as RectangleCorner} from '../primitives/Rectangle';

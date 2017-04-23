@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ROUGHLY_EPSILON } from '../missing-stuff';
-import { Vector3 as vec3 } from '../nd-linalg';
+import vec3 from '../nd-linalg/Vector3';
 
 import cdt2d from 'cdt2d';
 import cleanPSLG from 'clean-pslg';

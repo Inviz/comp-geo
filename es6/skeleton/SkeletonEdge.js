@@ -1,13 +1,13 @@
 var infinity = Infinity;
-import SkeletonVertex from './skeletonvertex';
-import SkeletonCollapseEvent from './skeletoncollapseevent';
-import SkeletonSplitEvent from './skeletonsplitevent';
-import { Vector2 as vec2 } from '../nd-linalg';
-import Chain from '../datastructures/chain';
-import Ray from '../primitives/ray';
-import Line from '../primitives/line';
-import intersect from '../intersections/intersections';
-import LineSegment from '../primitives/linesegment';
+import SkeletonVertex from './SkeletonVertex';
+import SkeletonCollapseEvent from './SkeletonCollapseEvent';
+import SkeletonSplitEvent from './SkeletonSplitEvent';
+import vec2 from '../nd-linalg/Vector2';
+import Chain from '../datastructures/Chain';
+import Ray from '../primitives/Ray';
+import Line from '../primitives/Line';
+import intersect from '../intersections/Intersections';
+import LineSegment from '../primitives/LineSegment';
 
 export var InnerEdge = Symbol("InnerEdge"),
 	OuterEdge = Symbol("OuterEdge"),

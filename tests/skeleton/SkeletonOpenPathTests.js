@@ -4,7 +4,7 @@ import SkeletonVertex from '../../es6/skeleton/skeletonvertex';
 import * as SkeletonEdge from '../../es6/skeleton/skeletonedge';
 import { assert } from '../../es6/missing-stuff';
 import Chance from 'chance';
-import { Vector2 as vec2 } from '../../es6/nd-linalg';
+import vec2 from '../../es6/nd-linalg/Vector2';
 import Path from '../../es6/shapes/path';
 import LineSegment from '../../es6/primitives/linesegment';
 

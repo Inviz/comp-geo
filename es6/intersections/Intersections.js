@@ -1,6 +1,6 @@
-import assert from 'assert';
+import { assert } from '../missing-stuff';
 import {theta as AngleTheta} from '../helpers/Angles';
-import {Vector2 as vec2} from '../nd-linalg';
+import vec2 from '../nd-linalg/Vector2';
 import {clamp, between, roughlyEqual, roughlyEqualVec2, ROUGHLY_EPSILON} from '../missing-stuff';
 
 export default intersect;

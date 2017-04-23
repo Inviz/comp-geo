@@ -15,15 +15,15 @@
  *  4) Extent the first and last segment to intersect the nearest original edge
  */
 
-import { Vector2 as vec2 } from '../nd-linalg';
-import { Vector3 as vec3 } from '../nd-linalg';
-import LineSegment from '../primitives/linesegment';
-import * as SkeletonEdge from './skeletonedge';
-import SkeletonWavefront from './skeletonwavefront';
-import Pather from '../../es6/helpers/pather';
-import Ray from '../primitives/ray';
-import Line from '../primitives/line';
-import intersect from '../intersections/intersections';
+import vec2 from '../nd-linalg/Vector2';
+import vec3 from '../nd-linalg/Vector3';
+import LineSegment from '../primitives/LineSegment';
+import * as SkeletonEdge from './SkeletonEdge';
+import SkeletonWavefront from './SkeletonWavefront';
+import Pather from '../../es6/helpers/Pather';
+import Ray from '../primitives/Ray';
+import Line from '../primitives/Line';
+import intersect from '../intersections/Intersections';
 
 var DeadEdge = Symbol("DeadEdge");
 var infinity = Infinity;

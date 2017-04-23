@@ -6,7 +6,7 @@ require("./Vector").create(3, Vector3);
 Object.defineProperties(Vector3, {
 	"cross": 	{value: cross}
 });
-module.exports = Vector3;
+export default Vector3
 
 function cross(output, a, b) {
 	var ax = a[0], ay = a[1], az = a[2],
