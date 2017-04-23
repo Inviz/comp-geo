@@ -1,6 +1,6 @@
 {
   "name": "comp-geo",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "2D Computational Geometry for Javascript",
   "main": "build/compgeo.js",
   "license": "MIT",
