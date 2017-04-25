@@ -54,6 +54,16 @@ function not(otherShape) {
 
 }
 
+function validate( vec ){
+	if( isNaN( vec[ 0 ] ) || isNaN( vec[ 1 ] ) ){
+		return false;
+	}
+	if( vec[ 0 ] === Infinity || vec[ 1 ] === Infinity ){
+		return false;
+	}
+	return true;
+}
+
 function triangulate(minVertexDistance = 0.00001) {
 	const geometry = new THREE.Geometry();
 
@@ -62,27 +72,36 @@ function triangulate(minVertexDistance = 0.00001) {
 
 	const vertices = [];
 
+	let count = 0;
 	this.contour.segments.forEach( function( {start, end}, index ){
-		vertices.push( start, end );
-		points.push( [start[0], start[1]], [end[0], end[1]] );
-		edges.push( [index * 2, index * 2 + 1] );
+		if( validate( start ) && validate( end ) ){
+			vertices.push( start, end );
+			points.push( [start[0], start[1]], [end[0], end[1]] );
+			edges.push( [count * 2, count * 2 + 1] );
+			count++;
+		}
 	});
 
+	const precision = 8;
 	//	preserve z-axis data...
 	const zs = {};
 	vertices.forEach( function( [x,y,z] ){
-		zs[ x.toFixed(4)+'_'+y.toFixed(4) ] = z;
+		if( z === undefined ){
+			z = 0;
+		}
+		zs[ x.toFixed( precision )+'_'+y.toFixed( precision ) ] = z;
 	});
 
 	//	clean up skeleton + contour because it's not a valid edge loop
 	cleanPSLG( points, edges );
 
-	const triangulation = cdt2d( points, edges, {exterior:false} );
+	const triangulation = cdt2d( points, edges, {exterior:false, delaunay:true} );
 
 	const points3D = points.map( function( [x,y] ){
-		const key = x.toFixed(4)+'_'+y.toFixed(4);
+		const key = x.toFixed( precision )+'_'+y.toFixed( precision );
 		const z = zs[key];
 		if( z === undefined ){
+			console.warn('z not found', x, y, zs );
 			return [ x,y,0 ];
 		}
 		return [x,y,z];

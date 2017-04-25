@@ -1,5 +1,96 @@
 import * as CompGeo from '../es6/index';
 
+export function h(){
+  const sh = [
+    [
+      {
+        "x": 5,
+        "y": 2,
+        "z": 0
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "z": 0
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "z": 0
+      },
+      {
+        "x": 5,
+        "y": 3,
+        "z": 0
+      },
+      {
+        "x": 5,
+        "y": 4,
+        "z": 0
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "z": 0
+      },
+      {
+        "x": 2,
+        "y": 3,
+        "z": 0
+      },
+      {
+        "x": 3,
+        "y": 3,
+        "z": 0
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "z": 0
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "z": 0
+      },
+      {
+        "x": 2,
+        "y": 1,
+        "z": 0
+      },
+      {
+        "x": 5,
+        "y": 1,
+        "z": 0
+      }
+    ]
+  ];
+
+  return gameShapeToCompGeoPath( sh.map( (path)=>path.map( (v)=>({x:v.x*0.25,y:v.y*0.25,z:v.z*0.25}))) );
+}
+
+function gameShapeToCompGeoPath( shape ){
+  const first = shape[0][0];
+  const pather = new CompGeo.shapes.Pather( [first.x, first.y] );
+  shape.forEach( function( path, pathIndex ){
+    path.forEach( function( vertex, vi ){
+      if( vi === 0 ){
+        return;
+      }
+      pather.lineTo( [ vertex.x, vertex.y ] );
+    });
+    pather.close();
+
+    const nextPath = shape[ pathIndex + 1 ];
+    if( nextPath ){
+      pather.moveTo( nextPath[ 0 ].x, nextPath[ 0 ].y );
+    }
+  });
+
+  // console.log( JSON.stringify( pather.path, null, 2 ) );
+  return pather.path;
+}
+
 export function convex() {
   return new CompGeo.shapes.Pather([0, 0.25])
     .lineTo([0.1, 0])
